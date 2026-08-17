@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { GetCurrentUserQuery } from '../impl/get-current-user.query';
 import { UsersRepository } from '../../repositories/users.repository';
-import { WorkspacesRepository } from '../../repositories/workspaces.repository';
+import { WorkspacesRepository } from '../../../workspaces/repositories/workspaces.repository';
 import { toUserResponse, UserResponse } from '../../dto/user-response.dto';
 
 @QueryHandler(GetCurrentUserQuery)

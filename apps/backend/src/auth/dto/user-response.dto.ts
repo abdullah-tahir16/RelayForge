@@ -1,5 +1,5 @@
 import { UserEntity } from '../entities/user.entity';
-import { WorkspaceEntity } from '../entities/workspace.entity';
+import { WorkspaceEntity } from '../../workspaces/entities/workspace.entity';
 
 export interface WorkspaceResponse {
   id: string;

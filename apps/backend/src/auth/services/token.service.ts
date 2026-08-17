@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { randomBytes, createHash } from 'crypto';
+import {
+  generateOpaqueToken,
+  hashOpaqueToken,
+  OpaqueToken,
+} from '../../common/crypto/opaque-token.util';
 
-export interface RawRefreshToken {
-  raw: string;
-  hash: string;
-}
+export type RawRefreshToken = OpaqueToken;
 
 @Injectable()
 export class TokenService {
@@ -26,12 +27,11 @@ export class TokenService {
   }
 
   generateRefreshToken(): RawRefreshToken {
-    const raw = randomBytes(32).toString('hex');
-    return { raw, hash: this.hashRefreshToken(raw) };
+    return generateOpaqueToken(32);
   }
 
   hashRefreshToken(raw: string): string {
-    return createHash('sha256').update(raw).digest('hex');
+    return hashOpaqueToken(raw);
   }
 
   isRefreshTokenExpired(createdAt: Date): boolean {

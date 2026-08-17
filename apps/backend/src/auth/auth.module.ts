@@ -6,11 +6,10 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { UserEntity } from './entities/user.entity';
-import { WorkspaceEntity } from './entities/workspace.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { UsersRepository } from './repositories/users.repository';
-import { WorkspacesRepository } from './repositories/workspaces.repository';
 import { RefreshTokensRepository } from './repositories/refresh-tokens.repository';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -32,7 +31,8 @@ const queryHandlers = [GetCurrentUserHandler];
   imports: [
     CqrsModule,
     PassportModule,
-    TypeOrmModule.forFeature([UserEntity, WorkspaceEntity, RefreshTokenEntity]),
+    WorkspacesModule,
+    TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -47,7 +47,6 @@ const queryHandlers = [GetCurrentUserHandler];
   controllers: [AuthController],
   providers: [
     UsersRepository,
-    WorkspacesRepository,
     RefreshTokensRepository,
     PasswordService,
     TokenService,

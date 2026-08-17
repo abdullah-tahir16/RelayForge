@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { UserEntity } from '../../auth/entities/user.entity';
 
 @Entity({ name: 'workspaces' })
 export class WorkspaceEntity {

@@ -4,7 +4,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { RegisterUserCommand } from '../impl/register-user.command';
 import { UserEntity } from '../../entities/user.entity';
-import { WorkspaceEntity } from '../../entities/workspace.entity';
+import { WorkspaceEntity } from '../../../workspaces/entities/workspace.entity';
 import { UsersRepository } from '../../repositories/users.repository';
 import { PasswordService } from '../../services/password.service';
 import { toUserResponse, UserResponse } from '../../dto/user-response.dto';
