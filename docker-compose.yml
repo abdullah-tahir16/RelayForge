@@ -1,0 +1,82 @@
+# Local development environment for RelayForge.
+#
+# postgres, kafka, and kafka-ui run real images and work today.
+# backend, delivery-worker, and frontend reference Dockerfiles that don't
+# exist yet — each app's own bootstrapping change adds its Dockerfile and
+# wires it in (see design.md in bootstrap-monorepo-scaffolding).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: relayforge
+      POSTGRES_PASSWORD: relayforge
+      POSTGRES_DB: relayforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  kafka:
+    image: apache/kafka:3.9.0
+    environment:
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: relayforge
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8080:8080"
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      DATABASE_URL: postgres://relayforge:relayforge@postgres:5432/relayforge
+      KAFKA_BROKERS: kafka:9092
+    ports:
+      - "3000:3000"
+
+  delivery-worker:
+    build:
+      context: .
+      dockerfile: apps/delivery-worker/Dockerfile
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      DATABASE_URL: postgres://relayforge:relayforge@postgres:5432/relayforge
+      KAFKA_BROKERS: kafka:9092
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+volumes:
+  postgres-data:
+  kafka-data:
