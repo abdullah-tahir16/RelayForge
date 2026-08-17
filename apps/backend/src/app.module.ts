@@ -6,6 +6,8 @@ import { buildDataSourceOptions } from './database/data-source-options';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
+import { EndpointsModule } from './endpoints/endpoints.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { ApiKeysModule } from './api-keys/api-keys.module';
     AuthModule,
     ProjectsModule,
     ApiKeysModule,
+    EndpointsModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}

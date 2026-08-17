@@ -1,0 +1,112 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserEntity } from '../auth/entities/user.entity';
+import { EndpointEntity } from './entities/endpoint.entity';
+import { CreateEndpointDto } from './dto/create-endpoint.dto';
+import { UpdateEndpointDto } from './dto/update-endpoint.dto';
+import { RegisterEndpointCommand } from './commands/impl/register-endpoint.command';
+import { UpdateEndpointCommand } from './commands/impl/update-endpoint.command';
+import { EnableEndpointCommand } from './commands/impl/enable-endpoint.command';
+import { DisableEndpointCommand } from './commands/impl/disable-endpoint.command';
+import { DeleteEndpointCommand } from './commands/impl/delete-endpoint.command';
+import { GetEndpointsQuery } from './queries/impl/get-endpoints.query';
+import { GetEndpointQuery } from './queries/impl/get-endpoint.query';
+
+@UseGuards(JwtAuthGuard)
+@Controller()
+export class EndpointsController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Post('api/v1/projects/:projectId/endpoints')
+  register(
+    @CurrentUser() user: UserEntity,
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateEndpointDto,
+  ): Promise<EndpointEntity> {
+    return this.commandBus.execute(
+      new RegisterEndpointCommand(
+        user.id,
+        projectId,
+        dto.name,
+        dto.url,
+        dto.description,
+        dto.timeoutMs,
+      ),
+    );
+  }
+
+  @Get('api/v1/projects/:projectId/endpoints')
+  findAll(
+    @CurrentUser() user: UserEntity,
+    @Param('projectId') projectId: string,
+  ): Promise<EndpointEntity[]> {
+    return this.queryBus.execute(new GetEndpointsQuery(user.id, projectId));
+  }
+
+  @Get('api/v1/endpoints/:id')
+  findOne(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<EndpointEntity> {
+    return this.queryBus.execute(new GetEndpointQuery(user.id, id));
+  }
+
+  @Patch('api/v1/endpoints/:id')
+  update(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+    @Body() dto: UpdateEndpointDto,
+  ): Promise<EndpointEntity> {
+    return this.commandBus.execute(
+      new UpdateEndpointCommand(
+        user.id,
+        id,
+        dto.name,
+        dto.url,
+        dto.description,
+        dto.timeoutMs,
+      ),
+    );
+  }
+
+  @Post('api/v1/endpoints/:id/enable')
+  enable(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<EndpointEntity> {
+    return this.commandBus.execute(new EnableEndpointCommand(user.id, id));
+  }
+
+  @Post('api/v1/endpoints/:id/disable')
+  disable(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<EndpointEntity> {
+    return this.commandBus.execute(new DisableEndpointCommand(user.id, id));
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('api/v1/endpoints/:id')
+  remove(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.commandBus.execute(new DeleteEndpointCommand(user.id, id));
+  }
+}

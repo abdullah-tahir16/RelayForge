@@ -18,7 +18,6 @@ A change should appear in exactly one section at a time (Planned items are not "
 Not yet proposed. Ordered by dependency — walking skeleton first (proves the end-to-end round trip in `documentation.md` §142 with the smallest real slice through every layer), then harden outward in the doc's existing v0.2→v0.5 order, split into changes smaller than the doc's monolithic per-version bundles.
 
 **Phase 1 — Walking Skeleton**
-3. `endpoint-and-subscription-minimal` — register endpoint, subscribe to event types (incl. wildcards)
 4. `event-ingestion-kafka-pipeline` — `POST /events` → Postgres → Kafka producer → routing consumer → delivery record → delivery consumer → webhook POST → SUCCEEDED/FAILED (no retries, no signing yet)
 5. `basic-dashboard` — list events + deliveries
 
@@ -56,6 +55,7 @@ _(none)_
 - [bootstrap-monorepo-scaffolding](openspec/changes/bootstrap-monorepo-scaffolding/proposal.md) — monorepo skeleton, docker-compose infra, `LLM_CONTEXT.md`, and this roadmap itself.
 - [auth-minimal](openspec/changes/auth-minimal/proposal.md) — register/login/refresh/logout/me, one workspace per user, refresh-token rotation with reuse detection. First real code in `apps/backend`.
 - [project-and-api-key-minimal](openspec/changes/project-and-api-key-minimal/proposal.md) — projects and API keys scoped to the caller's workspace; extracted a shared crypto-hashing util and a standalone `workspaces` module out of `auth`.
+- [endpoint-and-subscription-minimal](openspec/changes/endpoint-and-subscription-minimal/proposal.md) — webhook endpoints and event-pattern subscriptions scoped to the caller's workspace; literal-hostname blocklist on URLs, wildcard matcher deferred to routing.
 
 ## Archived
 
