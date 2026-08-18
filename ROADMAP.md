@@ -18,7 +18,6 @@ A change should appear in exactly one section at a time (Planned items are not "
 Not yet proposed. Ordered by dependency — walking skeleton first (proves the end-to-end round trip in `documentation.md` §142 with the smallest real slice through every layer), then harden outward in the doc's existing v0.2→v0.5 order, split into changes smaller than the doc's monolithic per-version bundles.
 
 **Phase 1 — Walking Skeleton**
-4. `event-ingestion-kafka-pipeline` — `POST /events` → Postgres → Kafka producer → routing consumer → delivery record → delivery consumer → webhook POST → SUCCEEDED/FAILED (no retries, no signing yet)
 5. `basic-dashboard` — list events + deliveries
 
 **Phase 2 — Reliability** (doc v0.2)
@@ -56,6 +55,7 @@ _(none)_
 - [auth-minimal](openspec/changes/auth-minimal/proposal.md) — register/login/refresh/logout/me, one workspace per user, refresh-token rotation with reuse detection. First real code in `apps/backend`.
 - [project-and-api-key-minimal](openspec/changes/project-and-api-key-minimal/proposal.md) — projects and API keys scoped to the caller's workspace; extracted a shared crypto-hashing util and a standalone `workspaces` module out of `auth`.
 - [endpoint-and-subscription-minimal](openspec/changes/endpoint-and-subscription-minimal/proposal.md) — webhook endpoints and event-pattern subscriptions scoped to the caller's workspace; literal-hostname blocklist on URLs, wildcard matcher deferred to routing.
+- [event-ingestion-kafka-pipeline](openspec/changes/event-ingestion-kafka-pipeline/proposal.md) — `POST /events` → Postgres → Kafka producer → routing consumer → delivery record → delivery consumer → webhook POST → SUCCEEDED/FAILED (no retries, no signing yet). First real code in `apps/delivery-worker` and `packages/kafka-contracts`; `docker-compose.yml`'s Kafka listener and single-broker `__consumer_offsets` config fixed along the way.
 
 ## Archived
 

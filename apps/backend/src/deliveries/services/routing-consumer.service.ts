@@ -1,0 +1,58 @@
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
+import { Consumer } from 'kafkajs';
+import { EVENTS_TOPIC, EventPublishedMessage, ROUTING_CONSUMER_GROUP } from '@relayforge/kafka-contracts';
+import { KafkaClientService } from '../../kafka/kafka-client.service';
+import { KafkaTopicsService } from '../../kafka/kafka-topics.service';
+import { RouteEventCommand } from '../commands/impl/route-event.command';
+
+@Injectable()
+export class RoutingConsumerService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(RoutingConsumerService.name);
+  private consumer: Consumer;
+
+  constructor(
+    private readonly kafkaClient: KafkaClientService,
+    private readonly kafkaTopics: KafkaTopicsService,
+    private readonly commandBus: CommandBus,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.kafkaTopics.ensureTopics();
+
+    this.consumer = this.kafkaClient.kafka.consumer({
+      groupId: ROUTING_CONSUMER_GROUP,
+    });
+    await this.consumer.connect();
+    await this.consumer.subscribe({ topic: EVENTS_TOPIC, fromBeginning: false });
+
+    await this.consumer.run({
+      autoCommit: false,
+      eachMessage: async ({ topic, partition, message }) => {
+        if (!message.value) {
+          return;
+        }
+        const payload = JSON.parse(
+          message.value.toString(),
+        ) as EventPublishedMessage;
+
+        try {
+          await this.commandBus.execute(new RouteEventCommand(payload.eventId));
+        } catch (error) {
+          this.logger.error(
+            `Failed to route event ${payload.eventId}: ${error}`,
+          );
+          throw error;
+        }
+
+        await this.consumer.commitOffsets([
+          { topic, partition, offset: (Number(message.offset) + 1).toString() },
+        ]);
+      },
+    });
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.consumer?.disconnect();
+  }
+}

@@ -8,6 +8,12 @@ export interface AppConfig {
     accessExpiresIn: string;
     refreshExpiresDays: number;
   };
+  kafka: {
+    brokers: string[];
+  };
+  events: {
+    maxPayloadBytes: number;
+  };
 }
 
 export default (): AppConfig => ({
@@ -22,6 +28,15 @@ export default (): AppConfig => ({
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
     refreshExpiresDays: parseInt(
       process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30',
+      10,
+    ),
+  },
+  kafka: {
+    brokers: (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(','),
+  },
+  events: {
+    maxPayloadBytes: parseInt(
+      process.env.EVENTS_MAX_PAYLOAD_BYTES ?? String(256 * 1024),
       10,
     ),
   },

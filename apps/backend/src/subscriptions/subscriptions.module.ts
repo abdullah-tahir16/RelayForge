@@ -28,5 +28,6 @@ const queryHandlers = [GetSubscriptionsHandler];
     ...commandHandlers,
     ...queryHandlers,
   ],
+  exports: [SubscriptionsRepository],
 })
 export class SubscriptionsModule {}

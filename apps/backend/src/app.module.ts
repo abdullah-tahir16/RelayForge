@@ -8,6 +8,9 @@ import { ProjectsModule } from './projects/projects.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { EventsModule } from './events/events.module';
+import { DeliveriesModule } from './deliveries/deliveries.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     ApiKeysModule,
     EndpointsModule,
     SubscriptionsModule,
+    EventsModule,
+    DeliveriesModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

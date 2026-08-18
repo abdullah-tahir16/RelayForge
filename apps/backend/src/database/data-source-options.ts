@@ -6,6 +6,8 @@ import { ProjectEntity } from '../projects/entities/project.entity';
 import { ApiKeyEntity } from '../api-keys/entities/api-key.entity';
 import { EndpointEntity } from '../endpoints/entities/endpoint.entity';
 import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
+import { EventEntity } from '../events/entities/event.entity';
+import { DeliveryEntity } from '../deliveries/entities/delivery.entity';
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
   return {
@@ -19,6 +21,8 @@ export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
       ApiKeyEntity,
       EndpointEntity,
       SubscriptionEntity,
+      EventEntity,
+      DeliveryEntity,
     ],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     synchronize: false,

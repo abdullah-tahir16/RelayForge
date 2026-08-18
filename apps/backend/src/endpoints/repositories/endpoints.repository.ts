@@ -24,4 +24,8 @@ export class EndpointsRepository {
   findById(id: string): Promise<EndpointEntity | null> {
     return this.repository.findOne({ where: { id } });
   }
+
+  findAllEnabledByProjectId(projectId: string): Promise<EndpointEntity[]> {
+    return this.repository.find({ where: { projectId, enabled: true } });
+  }
 }

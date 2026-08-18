@@ -6,6 +6,7 @@ import { ApiKeysController } from './api-keys.controller';
 import { ApiKeyEntity } from './entities/api-key.entity';
 import { ApiKeysRepository } from './repositories/api-keys.repository';
 import { ApiKeyGeneratorService } from './services/api-key-generator.service';
+import { ApiKeyStrategy } from './strategies/api-key.strategy';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { ProjectsModule } from '../projects/projects.module';
 import { GenerateApiKeyHandler } from './commands/handlers/generate-api-key.handler';
@@ -27,8 +28,10 @@ const queryHandlers = [GetApiKeysHandler];
   providers: [
     ApiKeysRepository,
     ApiKeyGeneratorService,
+    ApiKeyStrategy,
     ...commandHandlers,
     ...queryHandlers,
   ],
+  exports: [ApiKeysRepository],
 })
 export class ApiKeysModule {}

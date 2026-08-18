@@ -27,4 +27,12 @@ export class ApiKeysRepository {
   findById(id: string): Promise<ApiKeyEntity | null> {
     return this.repository.findOne({ where: { id } });
   }
+
+  findByHash(keyHash: string): Promise<ApiKeyEntity | null> {
+    return this.repository.findOne({ where: { keyHash } });
+  }
+
+  async touchLastUsedAt(id: string): Promise<void> {
+    await this.repository.update({ id }, { lastUsedAt: new Date() });
+  }
 }
