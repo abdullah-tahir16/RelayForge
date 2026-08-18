@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -18,6 +19,8 @@ import { SubscribeDto } from './dto/subscribe.dto';
 import { SubscribeEndpointCommand } from './commands/impl/subscribe-endpoint.command';
 import { UnsubscribeCommand } from './commands/impl/unsubscribe.command';
 import { GetSubscriptionsQuery } from './queries/impl/get-subscriptions.query';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -42,9 +45,15 @@ export class SubscriptionsController {
   findAll(
     @CurrentUser() user: UserEntity,
     @Param('id') endpointId: string,
-  ): Promise<SubscriptionEntity[]> {
+    @Query() pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<SubscriptionEntity>> {
     return this.queryBus.execute(
-      new GetSubscriptionsQuery(user.id, endpointId),
+      new GetSubscriptionsQuery(
+        user.id,
+        endpointId,
+        pagination.page,
+        pagination.pageSize,
+      ),
     );
   }
 

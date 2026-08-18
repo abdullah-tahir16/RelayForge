@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -22,6 +23,8 @@ import { UpdateProjectCommand } from './commands/impl/update-project.command';
 import { DeleteProjectCommand } from './commands/impl/delete-project.command';
 import { GetProjectsQuery } from './queries/impl/get-projects.query';
 import { GetProjectQuery } from './queries/impl/get-project.query';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api/v1/projects')
@@ -42,8 +45,13 @@ export class ProjectsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: UserEntity): Promise<ProjectEntity[]> {
-    return this.queryBus.execute(new GetProjectsQuery(user.id));
+  findAll(
+    @CurrentUser() user: UserEntity,
+    @Query() pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<ProjectEntity>> {
+    return this.queryBus.execute(
+      new GetProjectsQuery(user.id, pagination.page, pagination.pageSize),
+    );
   }
 
   @Get(':id')

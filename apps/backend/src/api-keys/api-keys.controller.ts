@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -19,6 +20,8 @@ import {
 import { GenerateApiKeyCommand } from './commands/impl/generate-api-key.command';
 import { RevokeApiKeyCommand } from './commands/impl/revoke-api-key.command';
 import { GetApiKeysQuery } from './queries/impl/get-api-keys.query';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -43,8 +46,16 @@ export class ApiKeysController {
   findAll(
     @CurrentUser() user: UserEntity,
     @Param('projectId') projectId: string,
-  ): Promise<ApiKeyResponse[]> {
-    return this.queryBus.execute(new GetApiKeysQuery(user.id, projectId));
+    @Query() pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<ApiKeyResponse>> {
+    return this.queryBus.execute(
+      new GetApiKeysQuery(
+        user.id,
+        projectId,
+        pagination.page,
+        pagination.pageSize,
+      ),
+    );
   }
 
   @Delete('api/v1/api-keys/:id')

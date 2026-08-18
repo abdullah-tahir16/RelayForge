@@ -41,6 +41,12 @@ export class DeliveryEntity {
   @Column({ type: 'timestamptz', name: 'failed_at', nullable: true })
   failedAt: Date | null;
 
+  @Column({ type: 'int', name: 'http_status_code', nullable: true })
+  httpStatusCode: number | null;
+
+  @Column({ type: 'int', name: 'duration_ms', nullable: true })
+  durationMs: number | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

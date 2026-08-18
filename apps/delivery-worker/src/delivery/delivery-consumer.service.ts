@@ -75,12 +75,16 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     const request = buildWebhookRequest(payload);
+    const startedAt = Date.now();
     const result = await this.webhookSender.send(request);
+    const durationMs = Date.now() - startedAt;
     const outcome: DeliveryOutcome = result.succeeded ? 'SUCCEEDED' : 'FAILED';
 
     const transitioned = await this.deliveriesSqlRepository.resolveDelivery(
       payload.deliveryId,
       outcome,
+      result.statusCode ?? null,
+      durationMs,
     );
     if (transitioned) {
       await this.deliveriesSqlRepository.aggregateEventStatus(payload.eventId);

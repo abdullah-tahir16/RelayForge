@@ -138,9 +138,51 @@ describe('DeliveryConsumerService (integration)', () => {
 
     expect(webhookSender.send).toHaveBeenCalledTimes(1);
     const result = await pool.query(
-      `SELECT status FROM deliveries WHERE id = $1`,
+      `SELECT status, http_status_code, duration_ms FROM deliveries WHERE id = $1`,
       [deliveryId],
     );
     expect(result.rows[0].status).toBe('SUCCEEDED');
+    expect(result.rows[0].http_status_code).toBe(200);
+    expect(typeof result.rows[0].duration_ms).toBe('number');
+    expect(result.rows[0].duration_ms).toBeGreaterThanOrEqual(0);
+  });
+
+  it('records duration but no HTTP status code when the endpoint is unreachable', async () => {
+    const projectId = await insertProject();
+    const endpointId = await insertEndpoint(projectId);
+    const eventId = await insertEvent(projectId);
+    const deliveryId = await insertDelivery(eventId, endpointId, 'PENDING');
+
+    const webhookSender = {
+      send: jest.fn().mockResolvedValue({ succeeded: false }),
+    } as unknown as WebhookSenderService;
+    const service = new DeliveryConsumerService(
+      {} as any,
+      {} as any,
+      webhookSender,
+      deliveriesSqlRepository,
+    );
+
+    const message: DeliveryRequestedMessage = {
+      version: 1,
+      deliveryId,
+      eventId,
+      endpointId,
+      eventType: 'order.completed',
+      eventCreatedAt: new Date().toISOString(),
+      data: {},
+      endpointUrl: 'https://example.com/webhook',
+      endpointTimeoutMs: 10000,
+    };
+
+    await (service as any).processDelivery(message);
+
+    const result = await pool.query(
+      `SELECT status, http_status_code, duration_ms FROM deliveries WHERE id = $1`,
+      [deliveryId],
+    );
+    expect(result.rows[0].status).toBe('FAILED');
+    expect(result.rows[0].http_status_code).toBeNull();
+    expect(typeof result.rows[0].duration_ms).toBe('number');
   });
 });

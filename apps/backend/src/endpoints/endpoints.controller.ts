@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -17,6 +18,7 @@ import { UserEntity } from '../auth/entities/user.entity';
 import { EndpointEntity } from './entities/endpoint.entity';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
+import { EndpointLookupItem } from './dto/endpoint-lookup-item.dto';
 import { RegisterEndpointCommand } from './commands/impl/register-endpoint.command';
 import { UpdateEndpointCommand } from './commands/impl/update-endpoint.command';
 import { EnableEndpointCommand } from './commands/impl/enable-endpoint.command';
@@ -24,6 +26,9 @@ import { DisableEndpointCommand } from './commands/impl/disable-endpoint.command
 import { DeleteEndpointCommand } from './commands/impl/delete-endpoint.command';
 import { GetEndpointsQuery } from './queries/impl/get-endpoints.query';
 import { GetEndpointQuery } from './queries/impl/get-endpoint.query';
+import { GetEndpointsLookupQuery } from './queries/impl/get-endpoints-lookup.query';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -55,8 +60,26 @@ export class EndpointsController {
   findAll(
     @CurrentUser() user: UserEntity,
     @Param('projectId') projectId: string,
-  ): Promise<EndpointEntity[]> {
-    return this.queryBus.execute(new GetEndpointsQuery(user.id, projectId));
+    @Query() pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<EndpointEntity>> {
+    return this.queryBus.execute(
+      new GetEndpointsQuery(
+        user.id,
+        projectId,
+        pagination.page,
+        pagination.pageSize,
+      ),
+    );
+  }
+
+  @Get('api/v1/projects/:projectId/endpoints/lookup')
+  findLookup(
+    @CurrentUser() user: UserEntity,
+    @Param('projectId') projectId: string,
+  ): Promise<EndpointLookupItem[]> {
+    return this.queryBus.execute(
+      new GetEndpointsLookupQuery(user.id, projectId),
+    );
   }
 
   @Get('api/v1/endpoints/:id')

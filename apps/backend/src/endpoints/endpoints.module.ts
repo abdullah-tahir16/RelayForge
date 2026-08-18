@@ -16,6 +16,7 @@ import { DisableEndpointHandler } from './commands/handlers/disable-endpoint.han
 import { DeleteEndpointHandler } from './commands/handlers/delete-endpoint.handler';
 import { GetEndpointsHandler } from './queries/handlers/get-endpoints.handler';
 import { GetEndpointHandler } from './queries/handlers/get-endpoint.handler';
+import { GetEndpointsLookupHandler } from './queries/handlers/get-endpoints-lookup.handler';
 
 const commandHandlers = [
   RegisterEndpointHandler,
@@ -24,7 +25,11 @@ const commandHandlers = [
   DisableEndpointHandler,
   DeleteEndpointHandler,
 ];
-const queryHandlers = [GetEndpointsHandler, GetEndpointHandler];
+const queryHandlers = [
+  GetEndpointsHandler,
+  GetEndpointHandler,
+  GetEndpointsLookupHandler,
+];
 
 @Module({
   imports: [

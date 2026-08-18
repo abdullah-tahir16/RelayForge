@@ -102,12 +102,15 @@ describe('Subscriptions (e2e)', () => {
       .expect(404);
   });
 
-  it('lists subscriptions for the caller-owned endpoint', async () => {
+  it('lists subscriptions for the caller-owned endpoint, paginated', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/endpoints/${endpointId}/subscriptions`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    expect(res.body).toHaveLength(2);
+    expect(res.body.items).toHaveLength(2);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(25);
+    expect(res.body.total).toBe(2);
   });
 
   it('404s listing subscriptions for another workspace endpoint', async () => {
@@ -132,6 +135,8 @@ describe('Subscriptions (e2e)', () => {
       .get(`/api/v1/endpoints/${endpointId}/subscriptions`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    expect(res.body.map((s: any) => s.id)).not.toContain(subscriptionId);
+    expect(res.body.items.map((s: any) => s.id)).not.toContain(
+      subscriptionId,
+    );
   });
 });

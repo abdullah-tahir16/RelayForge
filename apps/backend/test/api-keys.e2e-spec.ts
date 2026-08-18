@@ -81,14 +81,17 @@ describe('API Keys (e2e)', () => {
       .expect(404);
   });
 
-  it('lists keys masked, never exposing the full value or hash', async () => {
+  it('lists keys masked, never exposing the full value or hash, paginated', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/projects/${projectId}/api-keys`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
 
-    expect(res.body).toHaveLength(1);
-    const [key] = res.body;
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(25);
+    expect(res.body.total).toBe(1);
+    const [key] = res.body.items;
     expect(key.id).toBe(apiKeyId);
     expect(key.keyPrefix).toBeDefined();
     expect(key.key).toBeUndefined();
@@ -121,8 +124,8 @@ describe('API Keys (e2e)', () => {
       .get(`/api/v1/projects/${projectId}/api-keys`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    expect(listRes.body).toHaveLength(1);
-    expect(listRes.body[0].revokedAt).not.toBeNull();
+    expect(listRes.body.items).toHaveLength(1);
+    expect(listRes.body.items[0].revokedAt).not.toBeNull();
   });
 
   it('cascade-deletes the API key row when the project is deleted', async () => {

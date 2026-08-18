@@ -1,22 +1,33 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { GetProjectsQuery } from '../impl/get-projects.query';
 import { ProjectEntity } from '../../entities/project.entity';
-import { ProjectsRepository } from '../../repositories/projects.repository';
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
+import { paginate } from '../../../common/pagination/paginate';
+import { PaginatedResponse } from '../../../common/pagination/paginated-response.dto';
 
 @QueryHandler(GetProjectsQuery)
 export class GetProjectsHandler
-  implements IQueryHandler<GetProjectsQuery, ProjectEntity[]>
+  implements IQueryHandler<GetProjectsQuery, PaginatedResponse<ProjectEntity>>
 {
   constructor(
     private readonly workspacesService: WorkspacesService,
-    private readonly projectsRepository: ProjectsRepository,
+    @InjectRepository(ProjectEntity)
+    private readonly repository: Repository<ProjectEntity>,
   ) {}
 
-  async execute(query: GetProjectsQuery): Promise<ProjectEntity[]> {
+  async execute(
+    query: GetProjectsQuery,
+  ): Promise<PaginatedResponse<ProjectEntity>> {
     const workspaceId = await this.workspacesService.getWorkspaceIdForUser(
       query.userId,
     );
-    return this.projectsRepository.findAllByWorkspaceId(workspaceId);
+    return paginate(
+      this.repository,
+      { where: { workspaceId }, order: { createdAt: 'DESC' } },
+      query.page,
+      query.pageSize,
+    );
   }
 }

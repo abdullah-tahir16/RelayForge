@@ -24,14 +24,17 @@ export class DeliveriesSqlRepository {
   async resolveDelivery(
     deliveryId: string,
     outcome: DeliveryOutcome,
+    httpStatusCode: number | null,
+    durationMs: number,
   ): Promise<boolean> {
     const timestampColumn =
       outcome === 'SUCCEEDED' ? 'completed_at' : 'failed_at';
     const result = await this.pgPool.pool.query(
       `UPDATE deliveries
-       SET status = $1, attempt_count = attempt_count + 1, ${timestampColumn} = now(), updated_at = now()
+       SET status = $1, attempt_count = attempt_count + 1, ${timestampColumn} = now(), updated_at = now(),
+           http_status_code = $3, duration_ms = $4
        WHERE id = $2 AND status NOT IN ('SUCCEEDED', 'FAILED')`,
-      [outcome, deliveryId],
+      [outcome, deliveryId, httpStatusCode, durationMs],
     );
     return result.rowCount === 1;
   }

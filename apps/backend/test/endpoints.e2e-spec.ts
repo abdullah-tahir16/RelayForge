@@ -100,12 +100,30 @@ describe('Endpoints (e2e)', () => {
       .expect(404);
   });
 
-  it('lists only the caller workspace endpoints', async () => {
+  it('lists only the caller workspace endpoints, paginated', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/projects/${projectId}/endpoints`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
+    expect(res.body.items.map((e: any) => e.id)).toContain(endpointId);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(25);
+    expect(typeof res.body.total).toBe('number');
+  });
+
+  it('looks up every endpoint unpaginated, for another workspace 404s', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/api/v1/projects/${projectId}/endpoints/lookup`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(200);
+    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.map((e: any) => e.id)).toContain(endpointId);
+    expect(res.body[0]).toHaveProperty('name');
+
+    await request(app.getHttpServer())
+      .get(`/api/v1/projects/${projectId}/endpoints/lookup`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(404);
   });
 
   it('fetches an endpoint the caller owns, 404s for another workspace', async () => {

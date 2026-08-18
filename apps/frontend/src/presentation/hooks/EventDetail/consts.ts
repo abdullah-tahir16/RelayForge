@@ -1,0 +1,1 @@
+export const DELIVERIES_PAGE_SIZE = 100;

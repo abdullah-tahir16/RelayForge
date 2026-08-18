@@ -1,22 +1,29 @@
 import { NotFoundException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { GetEndpointsQuery } from '../impl/get-endpoints.query';
 import { EndpointEntity } from '../../entities/endpoint.entity';
-import { EndpointsRepository } from '../../repositories/endpoints.repository';
 import { ProjectsRepository } from '../../../projects/repositories/projects.repository';
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
+import { paginate } from '../../../common/pagination/paginate';
+import { PaginatedResponse } from '../../../common/pagination/paginated-response.dto';
 
 @QueryHandler(GetEndpointsQuery)
 export class GetEndpointsHandler
-  implements IQueryHandler<GetEndpointsQuery, EndpointEntity[]>
+  implements
+    IQueryHandler<GetEndpointsQuery, PaginatedResponse<EndpointEntity>>
 {
   constructor(
     private readonly workspacesService: WorkspacesService,
     private readonly projectsRepository: ProjectsRepository,
-    private readonly endpointsRepository: EndpointsRepository,
+    @InjectRepository(EndpointEntity)
+    private readonly repository: Repository<EndpointEntity>,
   ) {}
 
-  async execute(query: GetEndpointsQuery): Promise<EndpointEntity[]> {
+  async execute(
+    query: GetEndpointsQuery,
+  ): Promise<PaginatedResponse<EndpointEntity>> {
     const workspaceId = await this.workspacesService.getWorkspaceIdForUser(
       query.userId,
     );
@@ -28,6 +35,11 @@ export class GetEndpointsHandler
       throw new NotFoundException('Project not found');
     }
 
-    return this.endpointsRepository.findAllByProjectId(project.id);
+    return paginate(
+      this.repository,
+      { where: { projectId: project.id }, order: { createdAt: 'DESC' } },
+      query.page,
+      query.pageSize,
+    );
   }
 }

@@ -64,19 +64,35 @@ describe('Projects (e2e)', () => {
       .expect(400);
   });
 
-  it('lists only the caller workspace projects', async () => {
+  it('lists only the caller workspace projects, paginated', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/v1/projects')
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
 
-    expect(res.body.map((p: any) => p.id)).toContain(projectId);
+    expect(res.body.items.map((p: any) => p.id)).toContain(projectId);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(25);
+    expect(typeof res.body.total).toBe('number');
 
     const otherRes = await request(app.getHttpServer())
       .get('/api/v1/projects')
       .set('Authorization', `Bearer ${otherToken}`)
       .expect(200);
-    expect(otherRes.body.map((p: any) => p.id)).not.toContain(projectId);
+    expect(otherRes.body.items.map((p: any) => p.id)).not.toContain(
+      projectId,
+    );
+  });
+
+  it('respects explicit page and pageSize', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/projects?page=1&pageSize=1')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(200);
+
+    expect(res.body.items.length).toBeLessThanOrEqual(1);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(1);
   });
 
   it('fetches a project the caller owns', async () => {
