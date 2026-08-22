@@ -8,6 +8,7 @@ import { EndpointEntity } from '../endpoints/entities/endpoint.entity';
 import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
 import { EventEntity } from '../events/entities/event.entity';
 import { DeliveryEntity } from '../deliveries/entities/delivery.entity';
+import { DeliveryAttemptEntity } from '../deliveries/entities/delivery-attempt.entity';
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
   return {
@@ -23,6 +24,7 @@ export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
       SubscriptionEntity,
       EventEntity,
       DeliveryEntity,
+      DeliveryAttemptEntity,
     ],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     synchronize: false,

@@ -6,19 +6,35 @@ import { useProjectUseCase } from '../../../infrastructure/useCases/Project/useP
 import { useToast } from '../../toast/useToast';
 import { copyToClipboard, formatPayloadPretty } from '../../components/EventDetail/Payload/fns';
 import { DELIVERIES_PAGE_SIZE } from './consts';
+import { useGetDeliveryAttempts } from '../../../infrastructure/hooks/Delivery/useGetDeliveryAttempts';
+import {
+  Delivery,
+  NON_TERMINAL_DELIVERY_STATUSES,
+} from '../../../core/types/Delivery';
 
 export function useEventDetailFeature() {
   const { eventId = '' } = useParams<{ eventId: string }>();
   const { selectedProjectId } = useProjectUseCase();
   const toast = useToast();
   const [isRawView, setIsRawView] = useState(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState('');
 
   const eventQuery = useGetEvent(eventId);
   const deliveriesQuery = useGetDeliveries(selectedProjectId ?? '', {
     eventId,
     page: 1,
     pageSize: DELIVERIES_PAGE_SIZE,
-  });
+  }, true);
+  const deliveries = deliveriesQuery.data?.items ?? [];
+  const selectedDelivery =
+    deliveries.find((delivery) => delivery.id === selectedDeliveryId) ?? null;
+  const attemptsQuery = useGetDeliveryAttempts(
+    selectedDeliveryId,
+    Boolean(
+      selectedDelivery &&
+        NON_TERMINAL_DELIVERY_STATUSES.includes(selectedDelivery.status),
+    ),
+  );
 
   async function onCopyPayload(): Promise<void> {
     if (!eventQuery.data) {
@@ -30,10 +46,15 @@ export function useEventDetailFeature() {
 
   return {
     event: eventQuery.data,
-    deliveries: deliveriesQuery.data?.items ?? [],
+    deliveries,
+    selectedDelivery,
+    attempts: attemptsQuery.data ?? [],
+    attemptsLoading: attemptsQuery.isLoading,
+    attemptsError: attemptsQuery.isError,
     isLoading: eventQuery.isLoading,
     isRawView,
     onToggleRawView: setIsRawView,
     onCopyPayload,
+    onInspectDelivery: (delivery: Delivery) => setSelectedDeliveryId(delivery.id),
   };
 }

@@ -10,6 +10,11 @@ const EventDetailContainer = () => {
     isRawView,
     onToggleRawView,
     onCopyPayload,
+    selectedDelivery,
+    attempts,
+    attemptsLoading,
+    attemptsError,
+    onInspectDelivery,
   } = useEventDetailFeature();
 
   if (isLoading || !event) {
@@ -23,6 +28,11 @@ const EventDetailContainer = () => {
       isRawView={isRawView}
       onToggleRawView={onToggleRawView}
       onCopyPayload={onCopyPayload}
+      selectedDelivery={selectedDelivery}
+      attempts={attempts}
+      attemptsLoading={attemptsLoading}
+      attemptsError={attemptsError}
+      onInspectDelivery={onInspectDelivery}
     />
   );
 };

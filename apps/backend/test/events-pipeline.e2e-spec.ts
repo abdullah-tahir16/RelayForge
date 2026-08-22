@@ -242,7 +242,7 @@ describe('Events pipeline (e2e)', () => {
     expect(webhookServer.countFor(path)).toBe(0);
   }, 20000);
 
-  it('reaches PARTIALLY_FAILED when one endpoint succeeds and another fails', async () => {
+  it('keeps the event non-terminal while one endpoint is waiting to retry', async () => {
     const { token, projectId, apiKey } = await setupProjectWithKey();
     const successPath = `/mixed-success-${randomUUID()}`;
     const failPath = `/mixed-fail-${randomUUID()}`;
@@ -254,10 +254,13 @@ describe('Events pipeline (e2e)', () => {
     const eventId = await ingestEvent(apiKey, 'order.completed');
 
     await waitFor(async () => {
-      const event = await dataSource
-        .getRepository(EventEntity)
-        .findOne({ where: { id: eventId } });
-      return event?.status === 'PARTIALLY_FAILED';
+      const deliveries = await dataSource
+        .getRepository(DeliveryEntity)
+        .find({ where: { eventId } });
+      return (
+        deliveries.some((delivery) => delivery.status === 'SUCCEEDED') &&
+        deliveries.some((delivery) => delivery.status === 'RETRYING')
+      );
     });
 
     const deliveries = await dataSource
@@ -267,10 +270,15 @@ describe('Events pipeline (e2e)', () => {
     const bySuccess = deliveries.find((d) => d.endpointId === successEndpointId);
     const byFail = deliveries.find((d) => d.endpointId === failEndpointId);
     expect(bySuccess?.status).toBe('SUCCEEDED');
-    expect(byFail?.status).toBe('FAILED');
+    expect(byFail?.status).toBe('RETRYING');
+    expect(byFail?.nextAttemptAt).toBeInstanceOf(Date);
+    const event = await dataSource
+      .getRepository(EventEntity)
+      .findOneOrFail({ where: { id: eventId } });
+    expect(event.status).toBe('PROCESSING');
   }, 20000);
 
-  it('reaches FAILED when every matching delivery fails', async () => {
+  it('keeps the event non-terminal while every failed delivery can still retry', async () => {
     const { token, projectId, apiKey } = await setupProjectWithKey();
     const failPath = `/all-fail-${randomUUID()}`;
     const endpointId = await createEndpoint(token, projectId, failPath);
@@ -279,11 +287,16 @@ describe('Events pipeline (e2e)', () => {
     const eventId = await ingestEvent(apiKey, 'order.completed');
 
     await waitFor(async () => {
-      const event = await dataSource
-        .getRepository(EventEntity)
-        .findOne({ where: { id: eventId } });
-      return event?.status === 'FAILED';
+      const delivery = await dataSource
+        .getRepository(DeliveryEntity)
+        .findOne({ where: { eventId } });
+      return delivery?.status === 'RETRYING';
     });
+
+    const event = await dataSource
+      .getRepository(EventEntity)
+      .findOneOrFail({ where: { id: eventId } });
+    expect(event.status).toBe('PROCESSING');
   }, 20000);
 
   it('does not create a duplicate delivery when the routing consumer reprocesses the same event', async () => {

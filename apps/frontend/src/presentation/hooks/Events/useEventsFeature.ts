@@ -14,7 +14,11 @@ export function useEventsFeature() {
   const [filters, setFilters] = useState<EventFilters>({});
 
   const projectId = selectedProjectId ?? '';
-  const eventsQuery = useGetEvents(projectId, { page, pageSize, ...filters });
+  const eventsQuery = useGetEvents(
+    projectId,
+    { page, pageSize, ...filters },
+    true,
+  );
   const endpointsLookupQuery = useGetEndpointsLookup(projectId);
 
   function updateFilters(nextFilters: EventFilters): void {

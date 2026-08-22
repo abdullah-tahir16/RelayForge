@@ -66,3 +66,11 @@ These apply to any code touching endpoints, events, or auth — see `documentati
 ## Roadmap maintenance
 
 `ROADMAP.md` at the repo root tracks every OpenSpec change under Proposed / Doing / Done / Archived. It is maintained **manually** — update it as part of running `/opsx:propose`, `/opsx:apply`, or `/opsx:archive`, moving the change's entry to the section matching its new state. Do not let it drift; a stale roadmap is a defect (see `openspec/specs/project-roadmap/spec.md` once archived, or the delta at `openspec/changes/bootstrap-monorepo-scaffolding/specs/project-roadmap/spec.md` before then).
+
+## Delivery reliability
+
+Webhook delivery uses one immediate attempt plus staged Kafka retries after 30 seconds, 2 minutes, 10 minutes, and 1 hour (five attempts total by default). The worker persists every attempt independently, redacts sensitive request/response headers, and stores at most 4 KiB of textual response preview. `PROCESSING` means a worker owns the current attempt; `RETRYING` means the next attempt is durably scheduled; `FAILED` means the configured attempts are exhausted. DLQ publication and manual replay remain separate follow-up work.
+
+Delivery and retry messages are at-least-once. Database claims prevent concurrent sends for the same logical attempt, but a worker crash after the destination accepts a request and before the outcome is persisted can cause that request to be sent again after ownership expires. Do not describe RelayForge webhook delivery as exactly-once.
+
+Until the planned WebSocket change lands, event detail/delivery/attempt views poll every 2 seconds while non-terminal and event lists poll every 5 seconds; polling stops for terminal data and in background tabs.

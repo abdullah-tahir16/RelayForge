@@ -7,6 +7,8 @@ import { DeliveryEntity } from './entities/delivery.entity';
 import { ListDeliveriesQueryDto } from './dto/list-deliveries-query.dto';
 import { GetDeliveriesQuery } from './queries/impl/get-deliveries.query';
 import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
+import { GetDeliveryAttemptsQuery } from './queries/impl/get-delivery-attempts.query';
+import { DeliveryAttemptResponseDto } from './dto/delivery-attempt-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -33,5 +35,13 @@ export class DeliveriesQueryController {
         filters.createdTo,
       ),
     );
+  }
+
+  @Get('api/v1/deliveries/:deliveryId/attempts')
+  findAttempts(
+    @CurrentUser() user: UserEntity,
+    @Param('deliveryId') deliveryId: string,
+  ): Promise<DeliveryAttemptResponseDto[]> {
+    return this.queryBus.execute(new GetDeliveryAttemptsQuery(user.id, deliveryId));
   }
 }

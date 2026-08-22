@@ -5,7 +5,8 @@ import Payload from './Payload';
 import Deliveries from './Deliveries';
 import Timeline from './Timeline';
 import { EventDetail as EventDetailType } from '../../../core/types/Event';
-import { Delivery } from '../../../core/types/Delivery';
+import { Delivery, DeliveryAttempt } from '../../../core/types/Delivery';
+import DeliveryAttempts from './DeliveryAttempts';
 
 export interface EventDetailProps {
   event: EventDetailType;
@@ -13,6 +14,11 @@ export interface EventDetailProps {
   isRawView: boolean;
   onToggleRawView: (isRawView: boolean) => void;
   onCopyPayload: () => void;
+  selectedDelivery: Delivery | null;
+  attempts: DeliveryAttempt[];
+  attemptsLoading: boolean;
+  attemptsError: boolean;
+  onInspectDelivery: (delivery: Delivery) => void;
 }
 
 const EventDetail = ({
@@ -21,6 +27,11 @@ const EventDetail = ({
   isRawView,
   onToggleRawView,
   onCopyPayload,
+  selectedDelivery,
+  attempts,
+  attemptsLoading,
+  attemptsError,
+  onInspectDelivery,
 }: EventDetailProps) => {
   return (
     <Stack spacing={3}>
@@ -48,8 +59,21 @@ const EventDetail = ({
         <Typography variant="subtitle1" mb={1}>
           Deliveries
         </Typography>
-        <Deliveries deliveries={deliveries} />
+        <Deliveries deliveries={deliveries} onInspect={onInspectDelivery} />
       </section>
+
+      {selectedDelivery && (
+        <section>
+          <Typography variant="subtitle1" mb={1}>
+            Attempts for delivery {selectedDelivery.id}
+          </Typography>
+          <DeliveryAttempts
+            attempts={attempts}
+            isLoading={attemptsLoading}
+            isError={attemptsError}
+          />
+        </section>
+      )}
 
       <section>
         <Typography variant="subtitle1" mb={1}>

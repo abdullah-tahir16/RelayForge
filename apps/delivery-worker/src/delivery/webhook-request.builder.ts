@@ -8,7 +8,16 @@ export interface WebhookRequest {
 }
 
 export function buildWebhookRequest(
-  message: DeliveryRequestedMessage,
+  message: Pick<
+    DeliveryRequestedMessage,
+    | 'eventId'
+    | 'eventType'
+    | 'eventCreatedAt'
+    | 'data'
+    | 'endpointUrl'
+    | 'endpointTimeoutMs'
+    | 'deliveryId'
+  >,
 ): WebhookRequest {
   const body = JSON.stringify({
     id: message.eventId,

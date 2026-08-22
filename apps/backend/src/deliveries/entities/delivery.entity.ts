@@ -9,6 +9,8 @@ import {
 
 export enum DeliveryStatus {
   PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  RETRYING = 'RETRYING',
   SUCCEEDED = 'SUCCEEDED',
   FAILED = 'FAILED',
 }
@@ -46,6 +48,15 @@ export class DeliveryEntity {
 
   @Column({ type: 'int', name: 'duration_ms', nullable: true })
   durationMs: number | null;
+
+  @Column({ type: 'timestamptz', name: 'next_attempt_at', nullable: true })
+  nextAttemptAt: Date | null;
+
+  @Column({ type: 'uuid', name: 'processing_token', nullable: true, select: false })
+  processingToken: string | null;
+
+  @Column({ type: 'timestamptz', name: 'processing_expires_at', nullable: true, select: false })
+  processingExpiresAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

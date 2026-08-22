@@ -18,7 +18,6 @@ A change should appear in exactly one section at a time (Planned items are not "
 Not yet proposed. Ordered by dependency — walking skeleton first (proves the end-to-end round trip in `documentation.md` §142 with the smallest real slice through every layer), then harden outward in the doc's existing v0.2→v0.5 order, split into changes smaller than the doc's monolithic per-version bundles.
 
 **Phase 2 — Reliability** (doc v0.2)
-6. `delivery-attempts-and-retries`
 7. `dead-letter-queue-and-replay`
 
 **Phase 3 — Security & Correctness** (doc v0.3)
@@ -48,6 +47,7 @@ _(none)_
 
 ## Done
 
+- [delivery-attempts-and-retries](openspec/changes/delivery-attempts-and-retries/proposal.md) — immutable delivery-attempt history, five-attempt staged Kafka retry schedule, retry-safe state transitions, attempt-history API, and dashboard visibility; DLQ and replay remain in the next change.
 - [bootstrap-monorepo-scaffolding](openspec/changes/bootstrap-monorepo-scaffolding/proposal.md) — monorepo skeleton, docker-compose infra, `LLM_CONTEXT.md`, and this roadmap itself.
 - [auth-minimal](openspec/changes/auth-minimal/proposal.md) — register/login/refresh/logout/me, one workspace per user, refresh-token rotation with reuse detection. First real code in `apps/backend`.
 - [project-and-api-key-minimal](openspec/changes/project-and-api-key-minimal/proposal.md) — projects and API keys scoped to the caller's workspace; extracted a shared crypto-hashing util and a standalone `workspaces` module out of `auth`.

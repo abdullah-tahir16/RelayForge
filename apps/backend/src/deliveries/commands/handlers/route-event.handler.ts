@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   DELIVERIES_TOPIC,
-  DeliveryRequestedMessage,
+  DeliveryRequestedMessageV2,
 } from '@relayforge/kafka-contracts';
 import { RouteEventCommand } from '../impl/route-event.command';
 import { EventEntity, EventStatus } from '../../../events/entities/event.entity';
@@ -91,8 +91,12 @@ export class RouteEventHandler
       return;
     }
 
-    const message: DeliveryRequestedMessage = {
-      version: 1,
+    const message: DeliveryRequestedMessageV2 = {
+      version: 2,
+      jobId: `${deliveryId}:1`,
+      projectId: event.projectId,
+      attemptNumber: 1,
+      scheduledAt: new Date().toISOString(),
       deliveryId,
       eventId: event.id,
       endpointId: endpoint.id,

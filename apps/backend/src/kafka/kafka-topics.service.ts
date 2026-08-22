@@ -29,12 +29,13 @@ export class KafkaTopicsService implements OnModuleInit {
     const admin = this.kafkaClient.kafka.admin();
     await admin.connect();
     try {
-      await admin.createTopics({
-        topics: [
-          { topic: EVENTS_TOPIC, numPartitions: 3 },
-          { topic: DELIVERIES_TOPIC, numPartitions: 3 },
-        ],
-      });
+      const existing = new Set(await admin.listTopics());
+      const missing = [EVENTS_TOPIC, DELIVERIES_TOPIC]
+        .filter((topic) => !existing.has(topic))
+        .map((topic) => ({ topic, numPartitions: 3 }));
+      if (missing.length > 0) {
+        await admin.createTopics({ topics: missing });
+      }
     } catch (error) {
       this.logger.warn(`Topic bootstrap did not fully complete: ${error}`);
     } finally {

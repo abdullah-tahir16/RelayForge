@@ -8,6 +8,7 @@ export const STATUS_CHIP_COLOR: Record<string, ChipProps['color']> = {
   PARTIALLY_FAILED: 'warning',
   FAILED: 'error',
   PENDING: 'default',
+  RETRYING: 'warning',
   SUCCEEDED: 'success',
   DISABLED: 'default',
   ENABLED: 'success',

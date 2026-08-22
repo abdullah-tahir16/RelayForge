@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeliveriesQueryController } from './deliveries-query.controller';
 import { DeliveryEntity } from './entities/delivery.entity';
+import { DeliveryAttemptEntity } from './entities/delivery-attempt.entity';
 import { EventEntity } from '../events/entities/event.entity';
 import { EventPatternMatcherService } from './services/event-pattern-matcher.service';
 import { RoutingConsumerService } from './services/routing-consumer.service';
@@ -14,9 +15,10 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { ProjectsModule } from '../projects/projects.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { KafkaModule } from '../kafka/kafka.module';
+import { GetDeliveryAttemptsHandler } from './queries/handlers/get-delivery-attempts.handler';
 
 const commandHandlers = [RouteEventHandler];
-const queryHandlers = [GetDeliveriesHandler];
+const queryHandlers = [GetDeliveriesHandler, GetDeliveryAttemptsHandler];
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ const queryHandlers = [GetDeliveriesHandler];
     SubscriptionsModule,
     ProjectsModule,
     WorkspacesModule,
-    TypeOrmModule.forFeature([DeliveryEntity, EventEntity]),
+    TypeOrmModule.forFeature([DeliveryEntity, DeliveryAttemptEntity, EventEntity]),
   ],
   controllers: [DeliveriesQueryController],
   providers: [
