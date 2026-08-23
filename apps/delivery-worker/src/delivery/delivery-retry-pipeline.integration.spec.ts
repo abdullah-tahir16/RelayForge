@@ -2,7 +2,10 @@ import * as http from 'http';
 import { AddressInfo } from 'net';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { DeliveryRequestedMessageV2 } from '@relayforge/kafka-contracts';
+import {
+  deliveryJobId,
+  DeliveryRequestedMessageV3,
+} from '@relayforge/kafka-contracts';
 import { Admin, Kafka } from 'kafkajs';
 import { KafkaClientService } from '../kafka/kafka-client.service';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
@@ -14,6 +17,7 @@ import { RetryConsumerService } from './retry-consumer.service';
 import { RetryPolicyService } from './retry-policy.service';
 import { RetryPublisherService } from './retry-publisher.service';
 import { WebhookSenderService } from './webhook-sender.service';
+import { DeadLetterPublisherService } from './dead-letter-publisher.service';
 
 const BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(',');
 const DATABASE_URL =
@@ -39,6 +43,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
   const retryTopics = [1, 2, 3, 4].map(
     (stage) => `relayforge.test.pipeline.retry-${stage}.${suffix}`,
   );
+  const dlqTopic = `relayforge.test.pipeline.dlq.${suffix}`;
   const deliveryConsumerGroup = `relayforge-test-delivery-${suffix}`;
   const retryConsumerGroup = `relayforge-test-pipeline-retry-${suffix}`;
   const createdUserIds: string[] = [];
@@ -61,6 +66,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       deliveryConsumerGroup,
       retryTopics,
       retryConsumerGroup,
+      dlqTopic,
     },
     delivery: {
       retryDelaysMs: [100, 100, 100, 100],
@@ -79,13 +85,14 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     });
   }
 
-  async function createDelivery(path: string): Promise<DeliveryRequestedMessageV2> {
+  async function createDelivery(path: string): Promise<DeliveryRequestedMessageV3> {
     const userId = randomUUID();
     const workspaceId = randomUUID();
     const projectId = randomUUID();
     const endpointId = randomUUID();
     const eventId = randomUUID();
     const deliveryId = randomUUID();
+    const runId = randomUUID();
     createdUserIds.push(userId);
     createdProjectIds.push(projectId);
 
@@ -109,16 +116,36 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       `INSERT INTO events (id, project_id, event_type, payload, status) VALUES ($1, $2, 'order.completed', '{}', 'PROCESSING')`,
       [eventId, projectId],
     );
-    await pgPool.pool.query(
-      `INSERT INTO deliveries (id, event_id, endpoint_id, status) VALUES ($1, $2, $3, 'PENDING')`,
-      [deliveryId, eventId, endpointId],
-    );
+    const client = await pgPool.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `INSERT INTO deliveries (id, event_id, endpoint_id, status, current_run_id)
+         VALUES ($1, $2, $3, 'PENDING', $4)`,
+        [deliveryId, eventId, endpointId, runId],
+      );
+      await client.query(
+        `INSERT INTO delivery_runs (
+           id, delivery_id, run_number, trigger, status, initial_job_published_at
+         ) VALUES ($1, $2, 1, 'INITIAL', 'PENDING', now())`,
+        [runId, deliveryId],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     return {
-      version: 2,
-      jobId: `${deliveryId}:1`,
+      version: 3,
+      jobId: deliveryJobId(runId, 1),
       projectId,
+      runId,
+      runNumber: 1,
       attemptNumber: 1,
+      runAttemptNumber: 1,
       scheduledAt: new Date().toISOString(),
       deliveryId,
       eventId,
@@ -161,6 +188,11 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     const repository = new DeliveriesSqlRepository(pgPool);
     const retryPolicy = new RetryPolicyService(config);
     const retryPublisher = new RetryPublisherService(producer);
+    const deadLetterPublisher = new DeadLetterPublisherService(
+      producer,
+      repository,
+      config,
+    );
     const webhookSender = new WebhookSenderService(config);
     deliveryConsumer = new DeliveryConsumerService(
       client,
@@ -169,6 +201,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       repository,
       retryPolicy,
       retryPublisher,
+      deadLetterPublisher,
       config,
     );
     retryConsumer = new RetryConsumerService(client, topics, producer, config);
@@ -207,7 +240,9 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       await pgPool.pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
     }
     await pgPool?.onModuleDestroy();
-    await admin?.deleteTopics({ topics: [deliveriesTopic, ...retryTopics] });
+    await admin?.deleteTopics({
+      topics: [deliveriesTopic, dlqTopic, ...retryTopics],
+    });
     await admin?.disconnect();
     await new Promise<void>((resolve) => webhookServer.close(() => resolve()));
   }, 30_000);
@@ -235,7 +270,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     expect(await topicMessageCount(retryTopics[0])).toBe(1);
   }, 20_000);
 
-  it('exhausts five attempts and ignores replay after terminal failure', async () => {
+  it('exhausts five attempts, publishes a safe dead letter, and ignores the stale job', async () => {
     const job = await createDelivery(`/always-fail-${randomUUID()}`);
     await producer.publish(deliveriesTopic, job.projectId, job);
 
@@ -246,7 +281,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
           [job.deliveryId],
         );
         return (
-          result.rows[0]?.status === 'FAILED' &&
+          result.rows[0]?.status === 'DEAD_LETTERED' &&
           result.rows[0]?.attempt_count === 5
         );
       },
@@ -262,6 +297,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     for (const topic of retryTopics) {
       expect(await topicMessageCount(topic)).toBeGreaterThanOrEqual(1);
     }
+    expect(await topicMessageCount(dlqTopic)).toBe(1);
 
     await producer.publish(deliveriesTopic, job.projectId, job);
     await new Promise((resolve) => setTimeout(resolve, 250));

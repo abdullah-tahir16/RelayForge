@@ -49,6 +49,7 @@ describe('Delivery attempt history API (e2e)', () => {
     const endpointId = randomUUID();
     const eventId = randomUUID();
     const deliveryId = randomUUID();
+    const runId = randomUUID();
     await dataSource.query(
       `INSERT INTO endpoints (id, project_id, name, url) VALUES ($1, $2, 'Attempts', 'https://example.com')`,
       [endpointId, projectId],
@@ -57,18 +58,30 @@ describe('Delivery attempt history API (e2e)', () => {
       `INSERT INTO events (id, project_id, event_type, payload, status) VALUES ($1, $2, 'attempt.test', '{}', 'FAILED')`,
       [eventId, projectId],
     );
-    await dataSource.query(
-      `INSERT INTO deliveries (id, event_id, endpoint_id, status, attempt_count) VALUES ($1, $2, $3, 'FAILED', 2)`,
-      [deliveryId, eventId, endpointId],
-    );
+    await dataSource.transaction(async (manager) => {
+      await manager.query(
+        `INSERT INTO deliveries (
+          id, event_id, endpoint_id, status, attempt_count, current_run_id
+        ) VALUES ($1, $2, $3, 'FAILED', 2, $4)`,
+        [deliveryId, eventId, endpointId, runId],
+      );
+      await manager.query(
+        `INSERT INTO delivery_runs (
+          id, delivery_id, run_number, trigger, status, attempt_limit,
+          attempt_count, initial_job_published_at, failed_at
+        ) VALUES ($1, $2, 1, 'INITIAL', 'FAILED', 5, 2, now(), now())`,
+        [runId, deliveryId],
+      );
+    });
     await dataSource.query(
       `INSERT INTO delivery_attempts (
-        delivery_id, attempt_number, request_headers, response_status,
+        delivery_id, run_id, attempt_number, run_attempt_number,
+        request_headers, response_status,
         response_headers, duration_ms, started_at, completed_at
       ) VALUES
-        ($1, 2, '{"Authorization":"[REDACTED]"}', 500, '{"set-cookie":"[REDACTED]"}', 20, now(), now()),
-        ($1, 1, '{"Authorization":"[REDACTED]"}', 503, '{}', 10, now(), now())`,
-      [deliveryId],
+        ($1, $2, 2, 2, '{"Authorization":"[REDACTED]"}', 500, '{"set-cookie":"[REDACTED]"}', 20, now(), now()),
+        ($1, $2, 1, 1, '{"Authorization":"[REDACTED]"}', 503, '{}', 10, now(), now())`,
+      [deliveryId, runId],
     );
 
     const response = await request(app.getHttpServer())
@@ -78,6 +91,12 @@ describe('Delivery attempt history API (e2e)', () => {
     expect(response.body.map((attempt: any) => attempt.attemptNumber)).toEqual([1, 2]);
     expect(response.body[1].requestHeaders.Authorization).toBe('[REDACTED]');
     expect(response.body[1].responseHeaders['set-cookie']).toBe('[REDACTED]');
+    expect(response.body[0]).toMatchObject({
+      runId,
+      runNumber: 1,
+      runTrigger: 'INITIAL',
+      runAttemptNumber: 1,
+    });
 
     await request(app.getHttpServer())
       .get(`/api/v1/deliveries/${deliveryId}/attempts`)

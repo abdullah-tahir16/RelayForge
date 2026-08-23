@@ -1,12 +1,19 @@
 import * as http from 'http';
 import { AddressInfo } from 'net';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  INestApplicationContext,
+  ValidationPipe,
+} from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import * as request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { DeliveryEntity } from '../src/deliveries/entities/delivery.entity';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { AppModule: DeliveryWorkerAppModule } = require('../../delivery-worker/src/app.module');
 
 class TestWebhookServer {
   private readonly server: http.Server;
@@ -54,6 +61,7 @@ async function waitFor(
 
 describe('Deliveries read API (e2e)', () => {
   let app: INestApplication;
+  let workerApp: INestApplicationContext;
   let dataSource: DataSource;
   let webhookServer: TestWebhookServer;
 
@@ -138,9 +146,15 @@ describe('Deliveries read API (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     dataSource = moduleFixture.get(DataSource);
+
+    workerApp = await NestFactory.createApplicationContext(
+      DeliveryWorkerAppModule,
+      { logger: false },
+    );
   }, 30000);
 
   afterAll(async () => {
+    await workerApp.close();
     await app.close();
     await webhookServer.stop();
   });

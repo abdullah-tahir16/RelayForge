@@ -7,6 +7,7 @@ import { KafkaModule } from '../kafka/kafka.module';
 import { RetryPolicyService } from './retry-policy.service';
 import { RetryPublisherService } from './retry-publisher.service';
 import { RetryConsumerService } from './retry-consumer.service';
+import { DeadLetterPublisherService } from './dead-letter-publisher.service';
 
 @Module({
   imports: [KafkaModule],
@@ -18,6 +19,7 @@ import { RetryConsumerService } from './retry-consumer.service';
     RetryPolicyService,
     RetryPublisherService,
     RetryConsumerService,
+    DeadLetterPublisherService,
   ],
 })
 export class DeliveryModule {}

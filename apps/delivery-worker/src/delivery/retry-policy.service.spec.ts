@@ -11,6 +11,7 @@ describe('RetryPolicyService', () => {
     );
     expect(service.nextAfter(1)).toEqual({
       nextAttemptNumber: 2,
+      nextRunAttemptNumber: 2,
       delayMs: 1,
       stage: 1,
       topic: RETRY_30S_TOPIC,

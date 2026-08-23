@@ -13,6 +13,7 @@ export interface AppConfirmDialogProps {
   confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 const AppConfirmDialog = ({
@@ -22,6 +23,7 @@ const AppConfirmDialog = ({
   confirmLabel = 'Confirm',
   onConfirm,
   onCancel,
+  loading = false,
 }: AppConfirmDialogProps) => {
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
@@ -30,9 +32,9 @@ const AppConfirmDialog = ({
         <DialogContentText>{description}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
-        <AppButton color="error" onClick={onConfirm}>
-          {confirmLabel}
+        <Button onClick={onCancel} disabled={loading}>Cancel</Button>
+        <AppButton color="error" onClick={onConfirm} disabled={loading}>
+          {loading ? 'Working…' : confirmLabel}
         </AppButton>
       </DialogActions>
     </Dialog>

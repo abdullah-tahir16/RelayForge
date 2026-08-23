@@ -13,6 +13,7 @@ import EventsContainer from './presentation/containers/Events';
 import EventDetailContainer from './presentation/containers/EventDetail';
 import EndpointsContainer from './presentation/containers/Endpoints';
 import EndpointDetailContainer from './presentation/containers/EndpointDetail';
+import DeadLetterQueueContainer from './presentation/containers/DeadLetterQueue';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,16 @@ const App = () => {
                       <AuthGuard>
                         <DashboardLayout>
                           <EventDetailContainer />
+                        </DashboardLayout>
+                      </AuthGuard>
+                    }
+                  />
+                  <Route
+                    path="/dlq"
+                    element={
+                      <AuthGuard>
+                        <DashboardLayout>
+                          <DeadLetterQueueContainer />
                         </DashboardLayout>
                       </AuthGuard>
                     }

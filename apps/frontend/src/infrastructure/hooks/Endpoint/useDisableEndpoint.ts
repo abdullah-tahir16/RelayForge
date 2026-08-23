@@ -7,6 +7,7 @@ export function useDisableEndpoint(projectId: string) {
     mutationFn: (endpointId: string) => disableEndpoint(endpointId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['endpoints', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['dlq', projectId] });
     },
   });
 }

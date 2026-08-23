@@ -12,9 +12,18 @@ const EventDetailContainer = () => {
     onCopyPayload,
     selectedDelivery,
     attempts,
-    attemptsLoading,
-    attemptsError,
+    runs,
+    inspectorLoading,
+    inspectorError,
     onInspectDelivery,
+    replayDeliveryTarget,
+    eventReplayOpen,
+    replayPending,
+    onReplayDeliveryRequest,
+    onReplayEventRequest,
+    onConfirmDeliveryReplay,
+    onConfirmEventReplay,
+    onCancelReplay,
   } = useEventDetailFeature();
 
   if (isLoading || !event) {
@@ -30,9 +39,18 @@ const EventDetailContainer = () => {
       onCopyPayload={onCopyPayload}
       selectedDelivery={selectedDelivery}
       attempts={attempts}
-      attemptsLoading={attemptsLoading}
-      attemptsError={attemptsError}
+      runs={runs}
+      inspectorLoading={inspectorLoading}
+      inspectorError={inspectorError}
       onInspectDelivery={onInspectDelivery}
+      replayDeliveryTarget={replayDeliveryTarget}
+      eventReplayOpen={eventReplayOpen}
+      replayPending={replayPending}
+      onReplayDeliveryRequest={onReplayDeliveryRequest}
+      onReplayEventRequest={onReplayEventRequest}
+      onConfirmDeliveryReplay={onConfirmDeliveryReplay}
+      onConfirmEventReplay={onConfirmEventReplay}
+      onCancelReplay={onCancelReplay}
     />
   );
 };

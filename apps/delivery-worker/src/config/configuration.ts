@@ -1,6 +1,7 @@
 import {
   DELIVERIES_TOPIC,
   DELIVERY_CONSUMER_GROUP,
+  DLQ_TOPIC,
   RETRY_CONSUMER_GROUP,
   RETRY_TOPICS,
 } from '@relayforge/kafka-contracts';
@@ -12,6 +13,7 @@ export interface AppConfig {
   kafka: {
     brokers: string[];
     deliveriesTopic: string;
+    dlqTopic: string;
     deliveryConsumerGroup: string;
     retryTopics: string[];
     retryConsumerGroup: string;
@@ -75,10 +77,15 @@ export default (): AppConfig => {
     },
     kafka: {
       brokers: (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(','),
-      deliveriesTopic: DELIVERIES_TOPIC,
-      deliveryConsumerGroup: DELIVERY_CONSUMER_GROUP,
-      retryTopics: [...RETRY_TOPICS],
-      retryConsumerGroup: RETRY_CONSUMER_GROUP,
+      deliveriesTopic: process.env.KAFKA_DELIVERIES_TOPIC ?? DELIVERIES_TOPIC,
+      dlqTopic: process.env.KAFKA_DLQ_TOPIC ?? DLQ_TOPIC,
+      deliveryConsumerGroup:
+        process.env.KAFKA_DELIVERY_CONSUMER_GROUP ?? DELIVERY_CONSUMER_GROUP,
+      retryTopics: process.env.KAFKA_RETRY_TOPICS
+        ? process.env.KAFKA_RETRY_TOPICS.split(',').map((topic) => topic.trim())
+        : [...RETRY_TOPICS],
+      retryConsumerGroup:
+        process.env.KAFKA_RETRY_CONSUMER_GROUP ?? RETRY_CONSUMER_GROUP,
     },
     delivery: {
       retryDelaysMs,

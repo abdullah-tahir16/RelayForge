@@ -16,7 +16,9 @@ const DEFAULT_RETRY_TOPICS = [
 ];
 
 export interface NextRetry {
+  /** @deprecated Use nextRunAttemptNumber; retained for compatibility. */
   nextAttemptNumber: number;
+  nextRunAttemptNumber: number;
   delayMs: number;
   stage: RetryStage;
   topic: string;
@@ -54,6 +56,7 @@ export class RetryPolicyService {
     }
     return {
       nextAttemptNumber: completedAttemptNumber + 1,
+      nextRunAttemptNumber: completedAttemptNumber + 1,
       delayMs,
       stage,
       topic,

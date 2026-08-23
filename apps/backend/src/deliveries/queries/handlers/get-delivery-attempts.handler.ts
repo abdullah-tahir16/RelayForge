@@ -9,6 +9,7 @@ import { EventEntity } from '../../../events/entities/event.entity';
 import { ProjectEntity } from '../../../projects/entities/project.entity';
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
 import { DeliveryAttemptResponseDto } from '../../dto/delivery-attempt-response.dto';
+import { DeliveryRunEntity } from '../../entities/delivery-run.entity';
 
 @QueryHandler(GetDeliveryAttemptsQuery)
 export class GetDeliveryAttemptsHandler
@@ -20,6 +21,8 @@ export class GetDeliveryAttemptsHandler
     private readonly deliveriesRepository: Repository<DeliveryEntity>,
     @InjectRepository(DeliveryAttemptEntity)
     private readonly attemptsRepository: Repository<DeliveryAttemptEntity>,
+    @InjectRepository(DeliveryRunEntity)
+    private readonly runsRepository: Repository<DeliveryRunEntity>,
   ) {}
 
   async execute(query: GetDeliveryAttemptsQuery): Promise<DeliveryAttemptResponseDto[]> {
@@ -38,6 +41,16 @@ export class GetDeliveryAttemptsHandler
       where: { deliveryId: query.deliveryId },
       order: { attemptNumber: 'ASC' },
     });
-    return attempts.map(DeliveryAttemptResponseDto.fromEntity);
+    const runs = await this.runsRepository.find({
+      where: { deliveryId: query.deliveryId },
+    });
+    const runById = new Map(runs.map((run) => [run.id, run]));
+    return attempts.map((attempt) => {
+      const run = runById.get(attempt.runId);
+      return DeliveryAttemptResponseDto.fromEntity(
+        attempt,
+        run ? { runNumber: run.runNumber, trigger: run.trigger } : undefined,
+      );
+    });
   }
 }

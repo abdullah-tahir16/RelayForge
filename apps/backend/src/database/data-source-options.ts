@@ -9,6 +9,7 @@ import { SubscriptionEntity } from '../subscriptions/entities/subscription.entit
 import { EventEntity } from '../events/entities/event.entity';
 import { DeliveryEntity } from '../deliveries/entities/delivery.entity';
 import { DeliveryAttemptEntity } from '../deliveries/entities/delivery-attempt.entity';
+import { DeliveryRunEntity } from '../deliveries/entities/delivery-run.entity';
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
   return {
@@ -24,9 +25,10 @@ export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
       SubscriptionEntity,
       EventEntity,
       DeliveryEntity,
+      DeliveryRunEntity,
       DeliveryAttemptEntity,
     ],
-    migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+    migrations: [__dirname + '/../migrations/[0-9]*{.ts,.js}'],
     synchronize: false,
   };
 }

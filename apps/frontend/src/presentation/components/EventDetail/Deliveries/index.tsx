@@ -6,9 +6,13 @@ import AppButton from '../../App/AppButton';
 export interface DeliveriesProps {
   deliveries: Delivery[];
   onInspect: (delivery: Delivery) => void;
+  onReplay: (delivery: Delivery) => void;
 }
 
-const createColumns = (onInspect: (delivery: Delivery) => void): AppTableColumn<Delivery>[] => [
+const createColumns = (
+  onInspect: (delivery: Delivery) => void,
+  onReplay: (delivery: Delivery) => void,
+): AppTableColumn<Delivery>[] => [
   { key: 'endpointId', header: 'Endpoint', render: (row) => row.endpointId },
   {
     key: 'status',
@@ -36,17 +40,24 @@ const createColumns = (onInspect: (delivery: Delivery) => void): AppTableColumn<
     key: 'inspect',
     header: '',
     render: (row) => (
-      <AppButton size="small" variant="text" onClick={() => onInspect(row)}>
-        Inspect
-      </AppButton>
+      <div>
+        <AppButton size="small" variant="text" onClick={() => onInspect(row)}>
+          Inspect
+        </AppButton>
+        {['SUCCEEDED', 'FAILED', 'DEAD_LETTERED'].includes(row.status) && (
+          <AppButton size="small" variant="text" onClick={() => onReplay(row)}>
+            Replay
+          </AppButton>
+        )}
+      </div>
     ),
   },
 ];
 
-const Deliveries = ({ deliveries, onInspect }: DeliveriesProps) => {
+const Deliveries = ({ deliveries, onInspect, onReplay }: DeliveriesProps) => {
   return (
     <AppTable
-      columns={createColumns(onInspect)}
+      columns={createColumns(onInspect, onReplay)}
       rows={deliveries}
       getRowKey={(row) => row.id}
       emptyMessage="No deliveries yet"

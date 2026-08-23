@@ -13,6 +13,7 @@ export enum DeliveryStatus {
   RETRYING = 'RETRYING',
   SUCCEEDED = 'SUCCEEDED',
   FAILED = 'FAILED',
+  DEAD_LETTERED = 'DEAD_LETTERED',
 }
 
 @Entity({ name: 'deliveries' })
@@ -37,11 +38,19 @@ export class DeliveryEntity {
   @Column({ type: 'int', name: 'attempt_count', default: 0 })
   attemptCount: number;
 
+  @Column({ type: 'uuid', name: 'current_run_id' })
+  @Index()
+  currentRunId: string;
+
   @Column({ type: 'timestamptz', name: 'completed_at', nullable: true })
   completedAt: Date | null;
 
   @Column({ type: 'timestamptz', name: 'failed_at', nullable: true })
   failedAt: Date | null;
+
+  @Column({ type: 'timestamptz', name: 'dead_lettered_at', nullable: true })
+  @Index()
+  deadLetteredAt: Date | null;
 
   @Column({ type: 'int', name: 'http_status_code', nullable: true })
   httpStatusCode: number | null;

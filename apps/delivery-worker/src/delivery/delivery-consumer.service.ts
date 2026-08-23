@@ -16,6 +16,7 @@ import { DeliveriesSqlRepository } from './deliveries-sql.repository';
 import { redactHeaders } from './header-redaction';
 import { RetryPolicyService } from './retry-policy.service';
 import { RetryPublisherService } from './retry-publisher.service';
+import { DeadLetterPublisherService } from './dead-letter-publisher.service';
 
 @Injectable()
 export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -33,6 +34,7 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly deliveriesSqlRepository: DeliveriesSqlRepository,
     private readonly retryPolicy: RetryPolicyService,
     private readonly retryPublisher: RetryPublisherService,
+    private readonly deadLetterPublisher: DeadLetterPublisherService,
     configService: ConfigService,
   ) {
     this.processingLeaseMs = configService.get<number>('delivery.processingLeaseMs', 45_000);
@@ -83,29 +85,46 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
     const request = buildWebhookRequest(normalized);
     const safeRequestHeaders = redactHeaders(request.headers, this.sensitiveHeaders);
     const claim = await this.deliveriesSqlRepository.claimAttempt(
-      normalized.deliveryId,
-      normalized.attemptNumber,
+      normalized,
       safeRequestHeaders,
       this.processingLeaseMs,
+      this.retryPolicy.maxAttempts,
     );
 
-    if (claim.status === 'retry_required') {
+    if (claim.status === 'retry_publication_required') {
       await this.republishRequiredRetry(
         normalized,
         claim.projectId,
         claim.nextAttemptAt,
-        claim.completedAttempts,
+        claim.completedRunAttempts,
+        claim.runId,
+        claim.runNumber,
       );
       return;
     }
+    if (claim.status === 'dead_letter_publication_required') {
+      if (!claim.deadLetter) {
+        throw new Error('Persisted dead letter is missing its safe envelope');
+      }
+      await this.deadLetterPublisher.publish(claim.deadLetter);
+      return;
+    }
     if (
-      claim.status === 'terminal' ||
+      claim.status === 'terminal_legacy' ||
       claim.status === 'completed_duplicate' ||
+      claim.status === 'stale_run' ||
       claim.status === 'missing'
     ) {
       return;
     }
-    if (claim.status !== 'claimed' || !claim.processingToken || !claim.projectId) {
+    if (
+      claim.status !== 'claimed' ||
+      !claim.processingToken ||
+      !claim.projectId ||
+      !claim.runId ||
+      !claim.runNumber ||
+      !claim.runAttemptNumber
+    ) {
       throw new Error(`Delivery attempt cannot be claimed: ${claim.status}`);
     }
 
@@ -114,10 +133,12 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
     const durationMs = Date.now() - startedAt;
     const nextRetry = result.succeeded
       ? null
-      : this.retryPolicy.nextAfter(normalized.attemptNumber);
+      : this.retryPolicy.nextAfter(claim.runAttemptNumber);
     const completion = await this.deliveriesSqlRepository.completeAttempt(
       normalized.deliveryId,
+      claim.runId,
       normalized.attemptNumber,
+      claim.runAttemptNumber,
       claim.processingToken,
       {
         requestHeaders: safeRequestHeaders,
@@ -139,25 +160,42 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
         claim.projectId,
         nextRetry,
         completion.nextAttemptAt,
+        { id: claim.runId, number: claim.runNumber },
       );
       return;
     }
-    await this.deliveriesSqlRepository.aggregateEventStatus(normalized.eventId);
+    if (completion.state === 'DEAD_LETTERED') {
+      if (!completion.deadLetter) {
+        throw new Error('Exhausted delivery did not produce a dead-letter envelope');
+      }
+      await this.deadLetterPublisher.publish(completion.deadLetter);
+    }
   }
 
   private async republishRequiredRetry(
     normalized: NormalizedDeliveryRequestedMessage,
     projectId?: string,
     nextAttemptAt?: Date,
-    completedAttempts?: number,
+    completedRunAttempts?: number,
+    runId?: string,
+    runNumber?: number,
   ): Promise<void> {
     const retry = this.retryPolicy.nextAfter(
-      completedAttempts ?? normalized.attemptNumber,
+      completedRunAttempts ?? normalized.runAttemptNumber ?? normalized.attemptNumber,
     );
-    if (!retry || !projectId || !nextAttemptAt) {
+    if (
+      !retry ||
+      !projectId ||
+      !nextAttemptAt ||
+      !runId ||
+      !runNumber
+    ) {
       throw new Error('Persisted retry is missing scheduling metadata');
     }
-    await this.retryPublisher.schedule(normalized, projectId, retry, nextAttemptAt);
+    await this.retryPublisher.schedule(normalized, projectId, retry, nextAttemptAt, {
+      id: runId,
+      number: runNumber,
+    });
   }
 
   async onModuleDestroy(): Promise<void> {

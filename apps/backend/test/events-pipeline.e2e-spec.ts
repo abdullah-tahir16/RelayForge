@@ -11,6 +11,7 @@ import { AppModule } from '../src/app.module';
 import { EventEntity } from '../src/events/entities/event.entity';
 import { DeliveryEntity } from '../src/deliveries/entities/delivery.entity';
 import { RouteEventCommand } from '../src/deliveries/commands/impl/route-event.command';
+import { DeliveryRunEntity } from '../src/deliveries/entities/delivery-run.entity';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { AppModule: DeliveryWorkerAppModule } = require('../../delivery-worker/src/app.module');
 
@@ -211,6 +212,16 @@ describe('Events pipeline (e2e)', () => {
     expect(deliveries).toHaveLength(1);
     expect(deliveries[0].status).toBe('SUCCEEDED');
     expect(deliveries[0].endpointId).toBe(endpointId);
+    const initialRun = await dataSource
+      .getRepository(DeliveryRunEntity)
+      .findOneOrFail({ where: { id: deliveries[0].currentRunId } });
+    expect(initialRun).toMatchObject({
+      deliveryId: deliveries[0].id,
+      runNumber: 1,
+      trigger: 'INITIAL',
+      status: 'SUCCEEDED',
+      attemptCount: 1,
+    });
 
     expect(webhookServer.countFor(path)).toBe(1);
     const [received] = webhookServer.received.get(path)!;
@@ -323,5 +334,10 @@ describe('Events pipeline (e2e)', () => {
       .find({ where: { eventId } });
     expect(deliveries).toHaveLength(1);
     expect(deliveries[0].endpointId).toBe(endpointId);
+    expect(
+      await dataSource
+        .getRepository(DeliveryRunEntity)
+        .count({ where: { deliveryId: deliveries[0].id } }),
+    ).toBe(1);
   }, 20000);
 });

@@ -15,6 +15,7 @@ describe('delivery retry configuration', () => {
   });
 
   it('uses the documented defaults', () => {
+    expect(configuration().kafka.dlqTopic).toBe('relayforge.dlq');
     expect(configuration().delivery).toMatchObject({
       retryDelaysMs: [30_000, 120_000, 600_000, 3_600_000],
       maxAttempts: 5,

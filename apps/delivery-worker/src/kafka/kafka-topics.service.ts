@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DELIVERIES_TOPIC, RETRY_TOPICS } from '@relayforge/kafka-contracts';
+import {
+  DELIVERIES_TOPIC,
+  DLQ_TOPIC,
+  RETRY_TOPICS,
+} from '@relayforge/kafka-contracts';
 import { KafkaClientService } from './kafka-client.service';
 
 @Injectable()
@@ -15,6 +19,7 @@ export class KafkaTopicsService {
   ) {
     this.topics = [
       configService.get<string>('kafka.deliveriesTopic', DELIVERIES_TOPIC),
+      configService.get<string>('kafka.dlqTopic', DLQ_TOPIC),
       ...configService.get<string[]>('kafka.retryTopics', [...RETRY_TOPICS]),
     ];
   }

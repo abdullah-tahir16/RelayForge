@@ -10,6 +10,8 @@ export interface AppConfig {
   };
   kafka: {
     brokers: string[];
+    routingConsumerGroup: string;
+    routingFromBeginning: boolean;
   };
   events: {
     maxPayloadBytes: number;
@@ -33,6 +35,11 @@ export default (): AppConfig => ({
   },
   kafka: {
     brokers: (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(','),
+    routingConsumerGroup:
+      process.env.KAFKA_ROUTING_CONSUMER_GROUP ??
+      'relayforge-routing-consumers',
+    routingFromBeginning:
+      process.env.KAFKA_ROUTING_FROM_BEGINNING === 'true',
   },
   events: {
     maxPayloadBytes: parseInt(

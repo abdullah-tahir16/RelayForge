@@ -56,7 +56,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           ))}
         </List>
       </Drawer>
-      <Box component="main" flexGrow={1} p={3} mt={8}>
+      <Box component="main" flexGrow={1} minWidth={0} p={{ xs: 2, md: 3 }} mt={8}>
         {children}
       </Box>
     </Box>

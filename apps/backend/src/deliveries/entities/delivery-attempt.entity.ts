@@ -2,6 +2,7 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'delivery_attempts' })
 @Index(['deliveryId', 'attemptNumber'], { unique: true })
+@Index(['runId', 'runAttemptNumber'], { unique: true })
 export class DeliveryAttemptEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -9,8 +10,15 @@ export class DeliveryAttemptEntity {
   @Column({ type: 'uuid', name: 'delivery_id' })
   deliveryId: string;
 
+  @Column({ type: 'uuid', name: 'run_id' })
+  @Index()
+  runId: string;
+
   @Column({ type: 'int', name: 'attempt_number' })
   attemptNumber: number;
+
+  @Column({ type: 'int', name: 'run_attempt_number' })
+  runAttemptNumber: number;
 
   @Column({ type: 'jsonb', name: 'request_headers', nullable: true })
   requestHeaders: Record<string, string> | null;

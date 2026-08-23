@@ -16,9 +16,24 @@ import { ProjectsModule } from '../projects/projects.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { KafkaModule } from '../kafka/kafka.module';
 import { GetDeliveryAttemptsHandler } from './queries/handlers/get-delivery-attempts.handler';
+import { DeliveryRunEntity } from './entities/delivery-run.entity';
+import { GetDlqHandler } from './queries/handlers/get-dlq.handler';
+import { GetDeliveryRunsHandler } from './queries/handlers/get-delivery-runs.handler';
+import { ReplayCoordinatorService } from './services/replay-coordinator.service';
+import { ReplayDeliveryHandler } from './commands/handlers/replay-delivery.handler';
+import { ReplayEventHandler } from './commands/handlers/replay-event.handler';
 
-const commandHandlers = [RouteEventHandler];
-const queryHandlers = [GetDeliveriesHandler, GetDeliveryAttemptsHandler];
+const commandHandlers = [
+  RouteEventHandler,
+  ReplayDeliveryHandler,
+  ReplayEventHandler,
+];
+const queryHandlers = [
+  GetDeliveriesHandler,
+  GetDeliveryAttemptsHandler,
+  GetDlqHandler,
+  GetDeliveryRunsHandler,
+];
 
 @Module({
   imports: [
@@ -29,12 +44,18 @@ const queryHandlers = [GetDeliveriesHandler, GetDeliveryAttemptsHandler];
     SubscriptionsModule,
     ProjectsModule,
     WorkspacesModule,
-    TypeOrmModule.forFeature([DeliveryEntity, DeliveryAttemptEntity, EventEntity]),
+    TypeOrmModule.forFeature([
+      DeliveryEntity,
+      DeliveryRunEntity,
+      DeliveryAttemptEntity,
+      EventEntity,
+    ]),
   ],
   controllers: [DeliveriesQueryController],
   providers: [
     EventPatternMatcherService,
     RoutingConsumerService,
+    ReplayCoordinatorService,
     ...commandHandlers,
     ...queryHandlers,
   ],
