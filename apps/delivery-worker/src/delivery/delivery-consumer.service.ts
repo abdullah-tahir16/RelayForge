@@ -25,6 +25,7 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly sensitiveHeaders: string[];
   private readonly deliveriesTopic: string;
   private readonly deliveryConsumerGroup: string;
+  private readonly signingEncryptionKey: Buffer;
   private consumer: Consumer;
 
   constructor(
@@ -49,6 +50,9 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
     this.deliveryConsumerGroup = configService.get<string>(
       'kafka.deliveryConsumerGroup',
       DELIVERY_CONSUMER_GROUP,
+    );
+    this.signingEncryptionKey = configService.getOrThrow<Buffer>(
+      'signing.encryptionKey',
     );
   }
 
@@ -82,7 +86,7 @@ export class DeliveryConsumerService implements OnModuleInit, OnModuleDestroy {
 
   async processDelivery(payload: DeliveryRequestedMessage): Promise<void> {
     const normalized = normalizeDeliveryRequestedMessage(payload);
-    const request = buildWebhookRequest(normalized);
+    const request = buildWebhookRequest(normalized, this.signingEncryptionKey);
     const safeRequestHeaders = redactHeaders(request.headers, this.sensitiveHeaders);
     const claim = await this.deliveriesSqlRepository.claimAttempt(
       normalized,

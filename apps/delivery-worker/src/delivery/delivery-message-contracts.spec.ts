@@ -5,6 +5,7 @@ import {
   DeliveryRequestedMessageV1,
   DeliveryRequestedMessageV2,
   DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
   DLQ_TOPIC,
   normalizeDeliveryRequestedMessage,
 } from '@relayforge/kafka-contracts';
@@ -64,6 +65,28 @@ describe('delivery message contracts', () => {
     });
     expect(deliveryJobId('run-id', 1)).toBe('run-id:1');
     expect(deliveryJobId('run-id', 1)).toBe(deliveryJobId('run-id', 1));
+  });
+
+  it('round-trips v4 encrypted signing material without a plaintext field', () => {
+    const v4: DeliveryRequestedMessageV4 = {
+      ...base,
+      version: 4,
+      jobId: deliveryJobId('run-id', 1),
+      projectId: 'project-id',
+      runId: 'run-id',
+      runNumber: 1,
+      attemptNumber: 1,
+      runAttemptNumber: 1,
+      scheduledAt: '2026-08-27T10:02:00.000Z',
+      endpointSigningSecretEncrypted: 'v1.nonce.ciphertext.tag',
+      endpointSigningSecretVersion: 3,
+    };
+    expect(normalizeDeliveryRequestedMessage(v4)).toEqual({
+      ...v4,
+      sourceVersion: 4,
+    });
+    expect(JSON.stringify(v4)).toContain('endpointSigningSecretEncrypted');
+    expect(JSON.stringify(v4)).not.toMatch(/"signingSecret"|rfs_/);
   });
 
   it('defines a stable secret-free dead-letter envelope', () => {

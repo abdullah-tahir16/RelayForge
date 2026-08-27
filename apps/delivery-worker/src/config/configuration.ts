@@ -5,6 +5,7 @@ import {
   RETRY_CONSUMER_GROUP,
   RETRY_TOPICS,
 } from '@relayforge/kafka-contracts';
+import { parseSigningEncryptionKey } from '@relayforge/webhook-signing';
 
 export interface AppConfig {
   database: {
@@ -25,6 +26,9 @@ export interface AppConfig {
     responsePreviewMaxBytes: number;
     sensitiveHeaders: string[];
   };
+  signing: {
+    encryptionKey: Buffer;
+  };
 }
 
 const DEFAULT_RETRY_DELAYS_MS = [30_000, 120_000, 600_000, 3_600_000];
@@ -36,6 +40,7 @@ const DEFAULT_SENSITIVE_HEADERS = [
   'proxy-authenticate',
   'x-relayforge-signature',
 ];
+const DEVELOPMENT_SIGNING_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 export function parsePositiveInteger(value: string | undefined, fallback: number): number {
   const parsed = value === undefined ? fallback : Number(value);
@@ -105,6 +110,14 @@ export default (): AppConfig => {
         .split(',')
         .map((header) => header.trim().toLowerCase())
         .filter(Boolean),
+    },
+    signing: {
+      encryptionKey: parseSigningEncryptionKey(
+        process.env.SIGNING_SECRET_ENCRYPTION_KEY ??
+          (process.env.NODE_ENV === 'production'
+            ? undefined
+            : DEVELOPMENT_SIGNING_KEY),
+      ),
     },
   };
 };

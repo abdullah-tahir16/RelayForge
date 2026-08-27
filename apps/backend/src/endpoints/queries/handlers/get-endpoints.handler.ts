@@ -8,11 +8,15 @@ import { ProjectsRepository } from '../../../projects/repositories/projects.repo
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
 import { paginate } from '../../../common/pagination/paginate';
 import { PaginatedResponse } from '../../../common/pagination/paginated-response.dto';
+import {
+  EndpointResponseDto,
+  toEndpointResponse,
+} from '../../dto/endpoint-response.dto';
 
 @QueryHandler(GetEndpointsQuery)
 export class GetEndpointsHandler
   implements
-    IQueryHandler<GetEndpointsQuery, PaginatedResponse<EndpointEntity>>
+    IQueryHandler<GetEndpointsQuery, PaginatedResponse<EndpointResponseDto>>
 {
   constructor(
     private readonly workspacesService: WorkspacesService,
@@ -23,7 +27,7 @@ export class GetEndpointsHandler
 
   async execute(
     query: GetEndpointsQuery,
-  ): Promise<PaginatedResponse<EndpointEntity>> {
+  ): Promise<PaginatedResponse<EndpointResponseDto>> {
     const workspaceId = await this.workspacesService.getWorkspaceIdForUser(
       query.userId,
     );
@@ -35,11 +39,15 @@ export class GetEndpointsHandler
       throw new NotFoundException('Project not found');
     }
 
-    return paginate(
+    const response = await paginate(
       this.repository,
       { where: { projectId: project.id }, order: { createdAt: 'DESC' } },
       query.page,
       query.pageSize,
     );
+    return {
+      ...response,
+      items: response.items.map(toEndpointResponse),
+    };
   }
 }

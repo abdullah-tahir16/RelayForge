@@ -10,11 +10,25 @@ export interface AppDialogProps {
   onClose: () => void;
   actions?: ReactNode;
   children: ReactNode;
+  dismissible?: boolean;
 }
 
-const AppDialog = ({ open, title, onClose, actions, children }: AppDialogProps) => {
+const AppDialog = ({
+  open,
+  title,
+  onClose,
+  actions,
+  children,
+  dismissible = true,
+}: AppDialogProps) => {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={dismissible ? onClose : undefined}
+      disableEscapeKeyDown={!dismissible}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>{children}</DialogContent>
       {actions && <DialogActions>{actions}</DialogActions>}

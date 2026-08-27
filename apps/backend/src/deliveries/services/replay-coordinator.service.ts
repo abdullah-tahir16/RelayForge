@@ -9,7 +9,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import {
   DELIVERIES_TOPIC,
   deliveryJobId,
-  DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
 } from '@relayforge/kafka-contracts';
 import { KafkaProducerService } from '../../kafka/kafka-producer.service';
 import { WorkspacesService } from '../../workspaces/services/workspaces.service';
@@ -38,11 +38,13 @@ interface ReplayRow {
   endpoint_enabled: boolean;
   endpoint_url: string;
   endpoint_timeout_ms: number | string;
+  endpoint_signing_secret_encrypted: string;
+  endpoint_signing_secret_version: number | string;
 }
 
 interface PreparedReplay extends ReplayDeliveryResponseDto {
   projectId: string;
-  job: DeliveryRequestedMessageV3;
+  job: DeliveryRequestedMessageV4;
 }
 
 @Injectable()
@@ -239,7 +241,9 @@ function replaySelectSql(): string {
       r.initial_job_published_at,
       e.project_id, e.event_type, e.payload, e.created_at AS event_created_at,
       endpoint.enabled AS endpoint_enabled, endpoint.url AS endpoint_url,
-      endpoint.timeout_ms AS endpoint_timeout_ms
+      endpoint.timeout_ms AS endpoint_timeout_ms,
+      endpoint.signing_secret_encrypted AS endpoint_signing_secret_encrypted,
+      endpoint.signing_secret_version AS endpoint_signing_secret_version
     FROM deliveries d
     JOIN delivery_runs r ON r.id = d.current_run_id
     JOIN events e ON e.id = d.event_id
@@ -253,8 +257,8 @@ function buildPrepared(
   runNumber: number,
   status: ReplayStartKind,
 ): PreparedReplay {
-  const job: DeliveryRequestedMessageV3 = {
-    version: 3,
+  const job: DeliveryRequestedMessageV4 = {
+    version: 4,
     jobId: deliveryJobId(runId, 1),
     projectId: row.project_id,
     runId,
@@ -270,6 +274,8 @@ function buildPrepared(
     data: row.payload,
     endpointUrl: row.endpoint_url,
     endpointTimeoutMs: Number(row.endpoint_timeout_ms),
+    endpointSigningSecretEncrypted: row.endpoint_signing_secret_encrypted,
+    endpointSigningSecretVersion: Number(row.endpoint_signing_secret_version),
   };
   return {
     deliveryId: row.delivery_id,

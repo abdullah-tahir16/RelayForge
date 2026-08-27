@@ -21,6 +21,8 @@ const EndpointsContainer = () => {
       onDeleteClick={feature.onDeleteClick}
       onDeleteConfirm={feature.onDeleteConfirm}
       onDeleteCancel={feature.onDeleteCancel}
+      oneTimeSecret={feature.oneTimeSecret}
+      onOneTimeSecretAcknowledge={feature.onOneTimeSecretAcknowledge}
     />
   );
 };

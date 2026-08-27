@@ -4,8 +4,13 @@ import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import {
   deliveryJobId,
-  DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
 } from '@relayforge/kafka-contracts';
+import {
+  encryptSigningSecret,
+  hashSigningSecret,
+  verifyWebhookSignature,
+} from '@relayforge/webhook-signing';
 import { Admin, Kafka } from 'kafkajs';
 import { KafkaClientService } from '../kafka/kafka-client.service';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
@@ -23,6 +28,9 @@ const BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(',');
 const DATABASE_URL =
   process.env.DATABASE_URL ??
   'postgres://relayforge:relayforge@localhost:5432/relayforge';
+const SIGNING_KEY = Buffer.alloc(32, 11);
+const SIGNING_SECRET = 'rfs_pipeline_secret';
+const SIGNING_ENVELOPE = encryptSigningSecret(SIGNING_SECRET, SIGNING_KEY);
 
 async function waitFor(
   predicate: () => Promise<boolean> | boolean,
@@ -52,6 +60,10 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
   let webhookServer: http.Server;
   let webhookPort: number;
   const requestsByPath = new Map<string, number>();
+  const signaturesByPath = new Map<
+    string,
+    Array<{ timestamp: string; signature: string; body: string }>
+  >();
   let admin: Admin;
   let pgPool: PgPoolService;
   let producer: KafkaProducerService;
@@ -73,8 +85,14 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       maxAttempts: 5,
       processingLeaseMs: 5_000,
       responsePreviewMaxBytes: 4_096,
-      sensitiveHeaders: ['authorization', 'cookie', 'set-cookie'],
+      sensitiveHeaders: [
+        'authorization',
+        'cookie',
+        'set-cookie',
+        'x-relayforge-signature',
+      ],
     },
+    signing: { encryptionKey: SIGNING_KEY },
   });
 
   async function waitForGroup(groupId: string): Promise<void> {
@@ -85,7 +103,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     });
   }
 
-  async function createDelivery(path: string): Promise<DeliveryRequestedMessageV3> {
+  async function createDelivery(path: string): Promise<DeliveryRequestedMessageV4> {
     const userId = randomUUID();
     const workspaceId = randomUUID();
     const projectId = randomUUID();
@@ -109,8 +127,17 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       [projectId, workspaceId, randomUUID()],
     );
     await pgPool.pool.query(
-      `INSERT INTO endpoints (id, project_id, name, url) VALUES ($1, $2, 'Test', $3)`,
-      [endpointId, projectId, `http://127.0.0.1:${webhookPort}${path}`],
+      `INSERT INTO endpoints (
+        id, project_id, name, url, signing_secret_encrypted,
+        signing_secret_hash, signing_secret_version, signing_secret_rotated_at
+      ) VALUES ($1, $2, 'Test', $3, $4, $5, 1, now())`,
+      [
+        endpointId,
+        projectId,
+        `http://127.0.0.1:${webhookPort}${path}`,
+        SIGNING_ENVELOPE,
+        hashSigningSecret(SIGNING_SECRET),
+      ],
     );
     await pgPool.pool.query(
       `INSERT INTO events (id, project_id, event_type, payload, status) VALUES ($1, $2, 'order.completed', '{}', 'PROCESSING')`,
@@ -139,7 +166,7 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     }
 
     return {
-      version: 3,
+      version: 4,
       jobId: deliveryJobId(runId, 1),
       projectId,
       runId,
@@ -155,6 +182,8 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
       data: {},
       endpointUrl: `http://127.0.0.1:${webhookPort}${path}`,
       endpointTimeoutMs: 1_000,
+      endpointSigningSecretEncrypted: SIGNING_ENVELOPE,
+      endpointSigningSecretVersion: 1,
     };
   }
 
@@ -169,14 +198,26 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
   beforeAll(async () => {
     webhookServer = http.createServer((req, res) => {
       const path = req.url ?? '/';
-      const count = (requestsByPath.get(path) ?? 0) + 1;
-      requestsByPath.set(path, count);
-      const succeeds = path.startsWith('/flaky') ? count >= 2 : false;
-      res.writeHead(succeeds ? 200 : 503, {
-        'content-type': 'text/plain',
-        'set-cookie': 'must-not-be-persisted',
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        const count = (requestsByPath.get(path) ?? 0) + 1;
+        requestsByPath.set(path, count);
+        const body = Buffer.concat(chunks).toString('utf8');
+        const signed = signaturesByPath.get(path) ?? [];
+        signed.push({
+          timestamp: String(req.headers['x-relayforge-timestamp'] ?? ''),
+          signature: String(req.headers['x-relayforge-signature'] ?? ''),
+          body,
+        });
+        signaturesByPath.set(path, signed);
+        const succeeds = path.startsWith('/flaky') ? count >= 2 : false;
+        res.writeHead(succeeds ? 200 : 503, {
+          'content-type': 'text/plain',
+          'set-cookie': 'must-not-be-persisted',
+        });
+        res.end(succeeds ? 'ok' : 'try again');
       });
-      res.end(succeeds ? 'ok' : 'try again');
     });
     await new Promise<void>((resolve) => webhookServer.listen(0, resolve));
     webhookPort = (webhookServer.address() as AddressInfo).port;
@@ -248,7 +289,8 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
   }, 30_000);
 
   it('fails once, succeeds on retry, and persists both safe attempts', async () => {
-    const job = await createDelivery(`/flaky-${randomUUID()}`);
+    const path = `/flaky-${randomUUID()}`;
+    const job = await createDelivery(path);
     await producer.publish(deliveriesTopic, job.projectId, job);
 
     await waitFor(async () => {
@@ -260,13 +302,28 @@ describe('delivery retry pipeline (Docker Compose integration)', () => {
     });
 
     const attempts = await pgPool.pool.query(
-      `SELECT attempt_number, response_status, response_headers
+      `SELECT attempt_number, request_headers, response_status, response_headers
        FROM delivery_attempts WHERE delivery_id = $1 ORDER BY attempt_number`,
       [job.deliveryId],
     );
     expect(attempts.rows).toHaveLength(2);
     expect(attempts.rows.map((row) => row.response_status)).toEqual([503, 200]);
     expect(attempts.rows[0].response_headers['set-cookie']).toBe('[REDACTED]');
+    expect(attempts.rows[0].request_headers['X-RelayForge-Signature']).toBe(
+      '[REDACTED]',
+    );
+    const signed = signaturesByPath.get(path) ?? [];
+    expect(signed).toHaveLength(2);
+    for (const request of signed) {
+      expect(
+        verifyWebhookSignature(
+          SIGNING_SECRET,
+          request.timestamp,
+          request.body,
+          request.signature,
+        ),
+      ).toBe(true);
+    }
     expect(await topicMessageCount(retryTopics[0])).toBe(1);
   }, 20_000);
 

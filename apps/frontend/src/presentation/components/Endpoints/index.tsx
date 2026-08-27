@@ -3,7 +3,8 @@ import Table from './Table';
 import Form from './Form';
 import { EndpointFormSchemaValues } from './Form/data';
 import AppConfirmDialog from '../App/AppConfirmDialog';
-import { Endpoint } from '../../../core/types/Endpoint';
+import { Endpoint, SigningSecretRotated } from '../../../core/types/Endpoint';
+import OneTimeSecretDialog from '../SigningSecret';
 
 export interface EndpointsProps {
   rows: Endpoint[];
@@ -22,6 +23,8 @@ export interface EndpointsProps {
   onDeleteClick: (endpoint: Endpoint) => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
+  oneTimeSecret: SigningSecretRotated | null;
+  onOneTimeSecretAcknowledge: () => void;
 }
 
 const Endpoints = ({
@@ -41,6 +44,8 @@ const Endpoints = ({
   onDeleteClick,
   onDeleteConfirm,
   onDeleteCancel,
+  oneTimeSecret,
+  onOneTimeSecretAcknowledge,
 }: EndpointsProps) => {
   return (
     <div>
@@ -68,6 +73,13 @@ const Endpoints = ({
         confirmLabel="Delete"
         onConfirm={onDeleteConfirm}
         onCancel={onDeleteCancel}
+      />
+      <OneTimeSecretDialog
+        open={Boolean(oneTimeSecret)}
+        secret={oneTimeSecret?.signingSecret ?? ''}
+        version={oneTimeSecret?.version ?? 1}
+        rotatedAt={oneTimeSecret?.rotatedAt ?? new Date(0).toISOString()}
+        onAcknowledge={onOneTimeSecretAcknowledge}
       />
     </div>
   );

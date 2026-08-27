@@ -5,6 +5,12 @@ import * as request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { KafkaProducerService } from '../src/kafka/kafka-producer.service';
+import {
+  encryptSigningSecret,
+  hashSigningSecret,
+} from '@relayforge/webhook-signing';
+
+const SIGNING_KEY = Buffer.alloc(32);
 
 describe('Dead-letter queue and replay APIs (e2e)', () => {
   let app: INestApplication;
@@ -62,10 +68,23 @@ describe('Dead-letter queue and replay APIs (e2e)', () => {
     url = 'https://current.example.test/webhook',
   ): Promise<string> {
     const id = randomUUID();
+    const secret = `rfs_${randomUUID().replaceAll('-', '')}`;
     await dataSource.query(
-      `INSERT INTO endpoints (id, project_id, name, url, enabled, disabled_at)
-       VALUES ($1, $2, $3, $4, $5, CASE WHEN $5 THEN NULL ELSE now() END)`,
-      [id, projectId, `Endpoint ${id.slice(0, 6)}`, url, enabled],
+      `INSERT INTO endpoints (
+        id, project_id, name, url, enabled, disabled_at,
+        signing_secret_encrypted, signing_secret_hash,
+        signing_secret_version, signing_secret_rotated_at
+      ) VALUES ($1, $2, $3, $4, $5, CASE WHEN $5 THEN NULL ELSE now() END,
+        $6, $7, 1, now())`,
+      [
+        id,
+        projectId,
+        `Endpoint ${id.slice(0, 6)}`,
+        url,
+        enabled,
+        encryptSigningSecret(secret, SIGNING_KEY),
+        hashSigningSecret(secret),
+      ],
     );
     return id;
   }
@@ -224,6 +243,17 @@ describe('Dead-letter queue and replay APIs (e2e)', () => {
       attemptCount: 5,
     });
 
+    const rotation = await request(app.getHttpServer())
+      .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+    expect(rotation.body.version).toBe(2);
+    const currentSigning = await dataSource.query(
+      `SELECT signing_secret_encrypted AS encrypted
+       FROM endpoints WHERE id = $1`,
+      [endpointId],
+    );
+
     const replay = await request(app.getHttpServer())
       .post(`/api/v1/deliveries/${terminal.deliveryId}/replay`)
       .set('Authorization', `Bearer ${token}`)
@@ -235,14 +265,17 @@ describe('Dead-letter queue and replay APIs (e2e)', () => {
     });
     const publishedJob = publish.mock.calls.at(-1)?.[2] as Record<string, unknown>;
     expect(publishedJob).toMatchObject({
-      version: 3,
+      version: 4,
       runId: replay.body.runId,
       runNumber: 2,
       attemptNumber: 6,
       runAttemptNumber: 1,
       endpointUrl: 'https://repaired.example.test/new-hook',
       data: { invoiceId: 'immutable' },
+      endpointSigningSecretEncrypted: currentSigning[0].encrypted,
+      endpointSigningSecretVersion: 2,
     });
+    expect(JSON.stringify(publishedJob)).not.toContain(rotation.body.signingSecret);
     await request(app.getHttpServer())
       .post(`/api/v1/deliveries/${terminal.deliveryId}/replay`)
       .set('Authorization', `Bearer ${token}`)

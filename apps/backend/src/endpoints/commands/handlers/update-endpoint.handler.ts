@@ -6,10 +6,14 @@ import { UpdateEndpointCommand } from '../impl/update-endpoint.command';
 import { EndpointEntity } from '../../entities/endpoint.entity';
 import { EndpointAuthorizationService } from '../../services/endpoint-authorization.service';
 import { EndpointUrlValidatorService } from '../../services/endpoint-url-validator.service';
+import {
+  EndpointResponseDto,
+  toEndpointResponse,
+} from '../../dto/endpoint-response.dto';
 
 @CommandHandler(UpdateEndpointCommand)
 export class UpdateEndpointHandler
-  implements ICommandHandler<UpdateEndpointCommand, EndpointEntity>
+  implements ICommandHandler<UpdateEndpointCommand, EndpointResponseDto>
 {
   constructor(
     private readonly endpointAuthorizationService: EndpointAuthorizationService,
@@ -18,7 +22,7 @@ export class UpdateEndpointHandler
     private readonly repository: Repository<EndpointEntity>,
   ) {}
 
-  async execute(command: UpdateEndpointCommand): Promise<EndpointEntity> {
+  async execute(command: UpdateEndpointCommand): Promise<EndpointResponseDto> {
     const endpoint = await this.endpointAuthorizationService.getOwnedEndpoint(
       command.userId,
       command.endpointId,
@@ -43,6 +47,6 @@ export class UpdateEndpointHandler
       endpoint.timeoutMs = command.timeoutMs;
     }
 
-    return this.repository.save(endpoint);
+    return toEndpointResponse(await this.repository.save(endpoint));
   }
 }

@@ -41,15 +41,30 @@ export interface DeliveryRequestedMessageV3
   scheduledAt: string;
 }
 
+export interface DeliveryRequestedMessageV4
+  extends DeliveryRequestedMessageBase {
+  version: 4;
+  jobId: string;
+  projectId: string;
+  runId: string;
+  runNumber: number;
+  attemptNumber: number;
+  runAttemptNumber: number;
+  scheduledAt: string;
+  endpointSigningSecretEncrypted: string;
+  endpointSigningSecretVersion: number;
+}
+
 export type DeliveryRequestedMessage =
   | DeliveryRequestedMessageV1
   | DeliveryRequestedMessageV2
-  | DeliveryRequestedMessageV3;
+  | DeliveryRequestedMessageV3
+  | DeliveryRequestedMessageV4;
 
 export interface NormalizedDeliveryRequestedMessage
   extends DeliveryRequestedMessageBase {
-  version: 2 | 3;
-  sourceVersion: 1 | 2 | 3;
+  version: 2 | 3 | 4;
+  sourceVersion: 1 | 2 | 3 | 4;
   jobId: string;
   projectId?: string;
   runId?: string;
@@ -57,6 +72,8 @@ export interface NormalizedDeliveryRequestedMessage
   attemptNumber: number;
   runAttemptNumber?: number;
   scheduledAt: string;
+  endpointSigningSecretEncrypted?: string;
+  endpointSigningSecretVersion?: number;
 }
 
 /** A run UUID is globally unique, so it is sufficient to namespace every job in that run. */
@@ -71,6 +88,9 @@ export function deliveryJobId(
 export function normalizeDeliveryRequestedMessage(
   message: DeliveryRequestedMessage,
 ): NormalizedDeliveryRequestedMessage {
+  if (message.version === 4) {
+    return { ...message, sourceVersion: 4 };
+  }
   if (message.version === 3) {
     return { ...message, sourceVersion: 3 };
   }

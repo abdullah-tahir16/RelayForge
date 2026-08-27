@@ -104,19 +104,20 @@ export class DeliveriesSqlRepository {
       const projectId = row.project_id;
       const currentRunId = row.run_id;
       const currentRunNumber = Number(row.run_number);
+      const runAware = message.sourceVersion >= 3;
       const runAttemptNumber =
-        message.sourceVersion === 3
+        runAware
           ? message.runAttemptNumber
           : message.attemptNumber;
       const runMatches =
-        message.sourceVersion === 3
+        runAware
           ? message.runId === currentRunId &&
             message.runNumber === currentRunNumber &&
             runAttemptNumber !== undefined
           : currentRunNumber === 1 && row.run_trigger === 'INITIAL';
 
       if (!runMatches) {
-        if (message.sourceVersion === 3 && message.runId) {
+        if (runAware && message.runId) {
           const deadLetter = await this.loadUnpublishedDeadLetter(
             client,
             message.deliveryId,

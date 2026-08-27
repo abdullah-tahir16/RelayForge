@@ -1,3 +1,5 @@
+import { parseSigningEncryptionKey } from '@relayforge/webhook-signing';
+
 export interface AppConfig {
   port: number;
   database: {
@@ -16,7 +18,12 @@ export interface AppConfig {
   events: {
     maxPayloadBytes: number;
   };
+  signing: {
+    encryptionKey: Buffer;
+  };
 }
+
+const DEVELOPMENT_SIGNING_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 export default (): AppConfig => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
@@ -45,6 +52,14 @@ export default (): AppConfig => ({
     maxPayloadBytes: parseInt(
       process.env.EVENTS_MAX_PAYLOAD_BYTES ?? String(256 * 1024),
       10,
+    ),
+  },
+  signing: {
+    encryptionKey: parseSigningEncryptionKey(
+      process.env.SIGNING_SECRET_ENCRYPTION_KEY ??
+        (process.env.NODE_ENV === 'production'
+          ? undefined
+          : DEVELOPMENT_SIGNING_KEY),
     ),
   },
 });

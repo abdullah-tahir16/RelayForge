@@ -5,6 +5,8 @@ import * as request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { SubscriptionEntity } from '../src/subscriptions/entities/subscription.entity';
+import { EndpointEntity } from '../src/endpoints/entities/endpoint.entity';
+import { hashSigningSecret } from '@relayforge/webhook-signing';
 
 describe('Endpoints (e2e)', () => {
   let app: INestApplication;
@@ -52,6 +54,13 @@ describe('Endpoints (e2e)', () => {
   let otherToken: string;
   let projectId: string;
   let endpointId: string;
+  let initialSigningSecret: string;
+
+  function expectSecretSafe(body: Record<string, unknown>): void {
+    expect(body).not.toHaveProperty('signingSecret');
+    expect(body).not.toHaveProperty('signingSecretEncrypted');
+    expect(body).not.toHaveProperty('signingSecretHash');
+  }
 
   beforeAll(async () => {
     ownerToken = await registerAndLogin();
@@ -69,6 +78,10 @@ describe('Endpoints (e2e)', () => {
     expect(res.body.enabled).toBe(true);
     expect(res.body.timeoutMs).toBe(10000);
     expect(res.body.disabledAt).toBeNull();
+    expect(res.body.signingSecretVersion).toBe(1);
+    expect(res.body.signingSecretRotatedAt).toBeTruthy();
+    expect(res.body.signingSecret).toMatch(/^rfs_[A-Za-z0-9_-]{43}$/);
+    initialSigningSecret = res.body.signingSecret;
     endpointId = res.body.id;
   });
 
@@ -109,6 +122,7 @@ describe('Endpoints (e2e)', () => {
     expect(res.body.page).toBe(1);
     expect(res.body.pageSize).toBe(25);
     expect(typeof res.body.total).toBe('number');
+    expectSecretSafe(res.body.items.find((e: any) => e.id === endpointId));
   });
 
   it('looks up every endpoint unpaginated, for another workspace 404s', async () => {
@@ -127,15 +141,62 @@ describe('Endpoints (e2e)', () => {
   });
 
   it('fetches an endpoint the caller owns, 404s for another workspace', async () => {
-    await request(app.getHttpServer())
+    const ownResponse = await request(app.getHttpServer())
       .get(`/api/v1/endpoints/${endpointId}`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
+    expectSecretSafe(ownResponse.body);
 
     await request(app.getHttpServer())
       .get(`/api/v1/endpoints/${endpointId}`)
       .set('Authorization', `Bearer ${otherToken}`)
       .expect(404);
+  });
+
+  it('rotates atomically, serializes concurrent rotations, and keeps normal reads secret-safe', async () => {
+    const first = await request(app.getHttpServer())
+      .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(201);
+    expect(first.body.signingSecret).toMatch(/^rfs_[A-Za-z0-9_-]{43}$/);
+    expect(first.body.signingSecret).not.toBe(initialSigningSecret);
+    expect(first.body.version).toBe(2);
+    expect(first.body.rotatedAt).toBeTruthy();
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(404);
+
+    const concurrent = await Promise.all([
+      request(app.getHttpServer())
+        .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(201),
+      request(app.getHttpServer())
+        .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(201),
+    ]);
+    expect(concurrent.map(({ body }) => body.version).sort()).toEqual([3, 4]);
+
+    const currentResponse = concurrent.find(({ body }) => body.version === 4)!;
+    const stored = await dataSource
+      .getRepository(EndpointEntity)
+      .createQueryBuilder('endpoint')
+      .addSelect('endpoint.signingSecretHash')
+      .where('endpoint.id = :endpointId', { endpointId })
+      .getOneOrFail();
+    expect(stored.signingSecretHash).toBe(
+      hashSigningSecret(currentResponse.body.signingSecret),
+    );
+
+    const read = await request(app.getHttpServer())
+      .get(`/api/v1/endpoints/${endpointId}`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(200);
+    expect(read.body.signingSecretVersion).toBe(4);
+    expectSecretSafe(read.body);
   });
 
   it('updates the endpoint URL with the same validation as registration', async () => {
@@ -166,6 +227,12 @@ describe('Endpoints (e2e)', () => {
       .expect(201);
     expect(disableRes.body.enabled).toBe(false);
     expect(disableRes.body.disabledAt).not.toBeNull();
+
+    const disabledRotation = await request(app.getHttpServer())
+      .post(`/api/v1/endpoints/${endpointId}/signing-secret/rotate`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(201);
+    expect(disabledRotation.body.version).toBe(5);
 
     const enableRes = await request(app.getHttpServer())
       .post(`/api/v1/endpoints/${endpointId}/enable`)

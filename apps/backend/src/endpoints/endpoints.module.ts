@@ -17,6 +17,8 @@ import { DeleteEndpointHandler } from './commands/handlers/delete-endpoint.handl
 import { GetEndpointsHandler } from './queries/handlers/get-endpoints.handler';
 import { GetEndpointHandler } from './queries/handlers/get-endpoint.handler';
 import { GetEndpointsLookupHandler } from './queries/handlers/get-endpoints-lookup.handler';
+import { EndpointSigningMaterialService } from './services/endpoint-signing-material.service';
+import { RotateSigningSecretHandler } from './commands/handlers/rotate-signing-secret.handler';
 
 const commandHandlers = [
   RegisterEndpointHandler,
@@ -24,6 +26,7 @@ const commandHandlers = [
   EnableEndpointHandler,
   DisableEndpointHandler,
   DeleteEndpointHandler,
+  RotateSigningSecretHandler,
 ];
 const queryHandlers = [
   GetEndpointsHandler,
@@ -44,6 +47,7 @@ const queryHandlers = [
     EndpointsRepository,
     EndpointUrlValidatorService,
     EndpointAuthorizationService,
+    EndpointSigningMaterialService,
     ...commandHandlers,
     ...queryHandlers,
   ],

@@ -28,4 +28,15 @@ export class EndpointsRepository {
   findAllEnabledByProjectId(projectId: string): Promise<EndpointEntity[]> {
     return this.repository.find({ where: { projectId, enabled: true } });
   }
+
+  findAllEnabledWithSigningByProjectId(
+    projectId: string,
+  ): Promise<EndpointEntity[]> {
+    return this.repository
+      .createQueryBuilder('endpoint')
+      .addSelect('endpoint.signingSecretEncrypted')
+      .where('endpoint.projectId = :projectId', { projectId })
+      .andWhere('endpoint.enabled = true')
+      .getMany();
+  }
 }

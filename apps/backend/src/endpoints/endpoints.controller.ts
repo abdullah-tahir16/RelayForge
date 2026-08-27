@@ -15,7 +15,6 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserEntity } from '../auth/entities/user.entity';
-import { EndpointEntity } from './entities/endpoint.entity';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
 import { EndpointLookupItem } from './dto/endpoint-lookup-item.dto';
@@ -29,6 +28,12 @@ import { GetEndpointQuery } from './queries/impl/get-endpoint.query';
 import { GetEndpointsLookupQuery } from './queries/impl/get-endpoints-lookup.query';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
+import {
+  EndpointCreatedResponseDto,
+  EndpointResponseDto,
+  SigningSecretRotatedResponseDto,
+} from './dto/endpoint-response.dto';
+import { RotateSigningSecretCommand } from './commands/impl/rotate-signing-secret.command';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -43,7 +48,7 @@ export class EndpointsController {
     @CurrentUser() user: UserEntity,
     @Param('projectId') projectId: string,
     @Body() dto: CreateEndpointDto,
-  ): Promise<EndpointEntity> {
+  ): Promise<EndpointCreatedResponseDto> {
     return this.commandBus.execute(
       new RegisterEndpointCommand(
         user.id,
@@ -61,7 +66,7 @@ export class EndpointsController {
     @CurrentUser() user: UserEntity,
     @Param('projectId') projectId: string,
     @Query() pagination: PaginationQueryDto,
-  ): Promise<PaginatedResponse<EndpointEntity>> {
+  ): Promise<PaginatedResponse<EndpointResponseDto>> {
     return this.queryBus.execute(
       new GetEndpointsQuery(
         user.id,
@@ -86,7 +91,7 @@ export class EndpointsController {
   findOne(
     @CurrentUser() user: UserEntity,
     @Param('id') id: string,
-  ): Promise<EndpointEntity> {
+  ): Promise<EndpointResponseDto> {
     return this.queryBus.execute(new GetEndpointQuery(user.id, id));
   }
 
@@ -95,7 +100,7 @@ export class EndpointsController {
     @CurrentUser() user: UserEntity,
     @Param('id') id: string,
     @Body() dto: UpdateEndpointDto,
-  ): Promise<EndpointEntity> {
+  ): Promise<EndpointResponseDto> {
     return this.commandBus.execute(
       new UpdateEndpointCommand(
         user.id,
@@ -112,7 +117,7 @@ export class EndpointsController {
   enable(
     @CurrentUser() user: UserEntity,
     @Param('id') id: string,
-  ): Promise<EndpointEntity> {
+  ): Promise<EndpointResponseDto> {
     return this.commandBus.execute(new EnableEndpointCommand(user.id, id));
   }
 
@@ -120,8 +125,18 @@ export class EndpointsController {
   disable(
     @CurrentUser() user: UserEntity,
     @Param('id') id: string,
-  ): Promise<EndpointEntity> {
+  ): Promise<EndpointResponseDto> {
     return this.commandBus.execute(new DisableEndpointCommand(user.id, id));
+  }
+
+  @Post('api/v1/endpoints/:id/signing-secret/rotate')
+  rotateSigningSecret(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<SigningSecretRotatedResponseDto> {
+    return this.commandBus.execute(
+      new RotateSigningSecretCommand(user.id, id),
+    );
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -10,12 +10,18 @@ describe('webhook diagnostics', () => {
   it('redacts sensitive header names case-insensitively', () => {
     expect(
       redactHeaders(
-        { Authorization: 'secret', COOKIE: 'session', 'X-Safe': 'visible' },
-        ['authorization', 'cookie'],
+        {
+          Authorization: 'secret',
+          COOKIE: 'session',
+          'X-RelayForge-Signature': 'v1=secret',
+          'X-Safe': 'visible',
+        },
+        ['authorization', 'cookie', 'x-relayforge-signature'],
       ),
     ).toEqual({
       Authorization: REDACTED_HEADER_VALUE,
       COOKIE: REDACTED_HEADER_VALUE,
+      'X-RelayForge-Signature': REDACTED_HEADER_VALUE,
       'X-Safe': 'visible',
     });
   });

@@ -8,6 +8,8 @@ describe('delivery retry configuration', () => {
     delete process.env.DELIVERY_RETRY_DELAYS_MS;
     delete process.env.DELIVERY_MAX_ATTEMPTS;
     delete process.env.DELIVERY_RESPONSE_PREVIEW_MAX_BYTES;
+    delete process.env.SIGNING_SECRET_ENCRYPTION_KEY;
+    delete process.env.NODE_ENV;
   });
 
   afterAll(() => {
@@ -31,5 +33,19 @@ describe('delivery retry configuration', () => {
     expect(() => parseRetryDelays('1,2,3')).toThrow();
     expect(() => parseRetryDelays('1,2,0,4')).toThrow();
     expect(() => parsePositiveInteger('-1', 5)).toThrow();
+  });
+
+  it('requires a canonical 32-byte signing key in production', () => {
+    process.env.NODE_ENV = 'production';
+    expect(() => configuration()).toThrow(
+      'SIGNING_SECRET_ENCRYPTION_KEY must be canonical base64 for exactly 32 bytes',
+    );
+    process.env.SIGNING_SECRET_ENCRYPTION_KEY = 'not-a-key';
+    expect(() => configuration()).toThrow(
+      'SIGNING_SECRET_ENCRYPTION_KEY must be canonical base64 for exactly 32 bytes',
+    );
+    process.env.SIGNING_SECRET_ENCRYPTION_KEY =
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+    expect(configuration().signing.encryptionKey).toEqual(Buffer.alloc(32));
   });
 });

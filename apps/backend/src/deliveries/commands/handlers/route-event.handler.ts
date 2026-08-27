@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import {
   DELIVERIES_TOPIC,
   deliveryJobId,
-  DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
 } from '@relayforge/kafka-contracts';
 import { RouteEventCommand } from '../impl/route-event.command';
 import { EventEntity, EventStatus } from '../../../events/entities/event.entity';
@@ -45,7 +45,7 @@ export class RouteEventHandler
     }
 
     const enabledEndpoints =
-      await this.endpointsRepository.findAllEnabledByProjectId(
+      await this.endpointsRepository.findAllEnabledWithSigningByProjectId(
         event.projectId,
       );
 
@@ -134,8 +134,8 @@ export class RouteEventHandler
 
     if (!route.runId || !route.shouldPublish) return;
 
-    const message: DeliveryRequestedMessageV3 = {
-      version: 3,
+    const message: DeliveryRequestedMessageV4 = {
+      version: 4,
       jobId: deliveryJobId(route.runId, 1),
       projectId: event.projectId,
       runId: route.runId,
@@ -151,6 +151,8 @@ export class RouteEventHandler
       data: event.payload,
       endpointUrl: endpoint.url,
       endpointTimeoutMs: endpoint.timeoutMs,
+      endpointSigningSecretEncrypted: endpoint.signingSecretEncrypted,
+      endpointSigningSecretVersion: endpoint.signingSecretVersion,
     };
     await this.kafkaProducer.publish(DELIVERIES_TOPIC, event.projectId, message);
     await this.deliveriesRepository.manager

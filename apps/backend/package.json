@@ -24,6 +24,7 @@
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/typeorm": "^10.0.2",
     "@relayforge/kafka-contracts": "workspace:*",
+    "@relayforge/webhook-signing": "workspace:*",
     "argon2": "^0.41.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

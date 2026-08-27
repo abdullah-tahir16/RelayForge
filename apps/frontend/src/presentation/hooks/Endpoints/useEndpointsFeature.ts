@@ -8,7 +8,7 @@ import { useDisableEndpoint } from '../../../infrastructure/hooks/Endpoint/useDi
 import { useDeleteEndpoint } from '../../../infrastructure/hooks/Endpoint/useDeleteEndpoint';
 import { useProjectUseCase } from '../../../infrastructure/useCases/Project/useProjectUseCase';
 import { useToast } from '../../toast/useToast';
-import { Endpoint } from '../../../core/types/Endpoint';
+import { Endpoint, SigningSecretRotated } from '../../../core/types/Endpoint';
 import { EndpointFormSchemaValues } from '../../components/Endpoints/Form/data';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from './consts';
 
@@ -21,6 +21,8 @@ export function useEndpointsFeature() {
   const [editingEndpoint, setEditingEndpoint] = useState<Endpoint | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Endpoint | null>(null);
+  const [oneTimeSecret, setOneTimeSecret] =
+    useState<SigningSecretRotated | null>(null);
 
   const endpointsQuery = useGetEndpoints(projectId, {
     page: DEFAULT_PAGE,
@@ -56,7 +58,13 @@ export function useEndpointsFeature() {
         });
         toast.success('Endpoint updated');
       } else {
-        await createMutation.mutateAsync(values);
+        const created = await createMutation.mutateAsync(values);
+        setOneTimeSecret({
+          signingSecret: created.signingSecret,
+          version: created.signingSecretVersion,
+          rotatedAt: created.signingSecretRotatedAt,
+        });
+        createMutation.reset();
         toast.success('Endpoint created');
       }
       setIsFormOpen(false);
@@ -112,6 +120,7 @@ export function useEndpointsFeature() {
       : undefined,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
     deleteTarget,
+    oneTimeSecret,
     onRowClick,
     onCreateClick,
     onEditClick,
@@ -121,5 +130,6 @@ export function useEndpointsFeature() {
     onDeleteClick: setDeleteTarget,
     onDeleteConfirm,
     onDeleteCancel: () => setDeleteTarget(null),
+    onOneTimeSecretAcknowledge: () => setOneTimeSecret(null),
   };
 }

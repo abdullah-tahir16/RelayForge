@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   deliveryJobId,
   DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
   DeliveryRetryScheduledMessage,
   NormalizedDeliveryRequestedMessage,
 } from '@relayforge/kafka-contracts';
@@ -19,8 +20,7 @@ export class RetryPublisherService {
     notBefore: Date,
     run: { id: string; number: number },
   ): Promise<void> {
-    const delivery: DeliveryRequestedMessageV3 = {
-      version: 3,
+    const common = {
       jobId: deliveryJobId(run.id, retry.nextRunAttemptNumber),
       projectId,
       runId: run.id,
@@ -37,6 +37,20 @@ export class RetryPublisherService {
       endpointUrl: current.endpointUrl,
       endpointTimeoutMs: current.endpointTimeoutMs,
     };
+    const delivery: DeliveryRequestedMessageV3 | DeliveryRequestedMessageV4 =
+      current.sourceVersion === 4
+        ? {
+            ...common,
+            version: 4,
+            endpointSigningSecretEncrypted:
+              current.endpointSigningSecretEncrypted!,
+            endpointSigningSecretVersion:
+              current.endpointSigningSecretVersion!,
+          }
+        : {
+            ...common,
+            version: 3,
+          };
     const message: DeliveryRetryScheduledMessage = {
       version: 1,
       stage: retry.stage,

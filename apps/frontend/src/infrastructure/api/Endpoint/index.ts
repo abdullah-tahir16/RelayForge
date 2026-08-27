@@ -1,5 +1,9 @@
 import { apiClient } from '../client';
-import { Endpoint } from '../../../core/types/Endpoint';
+import {
+  Endpoint,
+  EndpointCreated,
+  SigningSecretRotated,
+} from '../../../core/types/Endpoint';
 import {
   CreateEndpointRequest,
   GetEndpointsLookupResponse,
@@ -38,10 +42,19 @@ export async function getEndpointsLookup(
 export async function createEndpoint(
   projectId: string,
   request: CreateEndpointRequest,
-): Promise<Endpoint> {
-  const response = await apiClient.post<Endpoint>(
+): Promise<EndpointCreated> {
+  const response = await apiClient.post<EndpointCreated>(
     `/api/v1/projects/${projectId}/endpoints`,
     request,
+  );
+  return response.data;
+}
+
+export async function rotateEndpointSigningSecret(
+  endpointId: string,
+): Promise<SigningSecretRotated> {
+  const response = await apiClient.post<SigningSecretRotated>(
+    `/api/v1/endpoints/${endpointId}/signing-secret/rotate`,
   );
   return response.data;
 }

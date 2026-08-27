@@ -5,11 +5,15 @@ import {
   deliveryJobId,
   DeliveryRequestedMessage,
   DeliveryRequestedMessageV2,
-  DeliveryRequestedMessageV3,
+  DeliveryRequestedMessageV4,
   DeliveryRetryScheduledMessage,
   DLQ_TOPIC,
   normalizeDeliveryRequestedMessage,
 } from '@relayforge/kafka-contracts';
+import {
+  encryptSigningSecret,
+  hashSigningSecret,
+} from '@relayforge/webhook-signing';
 import { DeliveryConsumerService } from './delivery-consumer.service';
 import { DeliveriesSqlRepository } from './deliveries-sql.repository';
 import { PgPoolService } from './pg-pool.service';
@@ -21,6 +25,9 @@ import { DeadLetterPublisherService } from './dead-letter-publisher.service';
 const DATABASE_URL =
   process.env.DATABASE_URL ??
   'postgres://relayforge:relayforge@localhost:5432/relayforge';
+const SIGNING_KEY = Buffer.alloc(32, 9);
+const SIGNING_SECRET = 'rfs_integration_secret';
+const SIGNING_ENVELOPE = encryptSigningSecret(SIGNING_SECRET, SIGNING_KEY);
 
 describe('delivery attempt state machine (integration)', () => {
   let pool: Pool;
@@ -56,8 +63,11 @@ describe('delivery attempt state machine (integration)', () => {
       [projectId, workspaceId, randomUUID()],
     );
     await pool.query(
-      `INSERT INTO endpoints (id, project_id, name, url) VALUES ($1, $2, 'Test', 'https://example.com')`,
-      [endpointId, projectId],
+      `INSERT INTO endpoints (
+        id, project_id, name, url, signing_secret_encrypted,
+        signing_secret_hash, signing_secret_version, signing_secret_rotated_at
+      ) VALUES ($1, $2, 'Test', 'https://example.com', $3, $4, 1, now())`,
+      [endpointId, projectId, SIGNING_ENVELOPE, hashSigningSecret(SIGNING_SECRET)],
     );
     await pool.query(
       `INSERT INTO events (id, project_id, event_type, payload, status) VALUES ($1, $2, 'order.completed', '{}', 'PROCESSING')`,
@@ -89,9 +99,9 @@ describe('delivery attempt state machine (integration)', () => {
 
   function message(
     ids: Awaited<ReturnType<typeof createDelivery>>,
-  ): DeliveryRequestedMessageV3 {
+  ): DeliveryRequestedMessageV4 {
     return {
-      version: 3,
+      version: 4,
       jobId: deliveryJobId(ids.runId, 1),
       projectId: ids.projectId,
       runId: ids.runId,
@@ -107,6 +117,8 @@ describe('delivery attempt state machine (integration)', () => {
       data: {},
       endpointUrl: 'https://example.com',
       endpointTimeoutMs: 1000,
+      endpointSigningSecretEncrypted: SIGNING_ENVELOPE,
+      endpointSigningSecretVersion: 1,
     };
   }
 
@@ -124,7 +136,7 @@ describe('delivery attempt state machine (integration)', () => {
   async function startManualRun(
     ids: Awaited<ReturnType<typeof createDelivery>>,
     runNumber = 2,
-  ): Promise<DeliveryRequestedMessageV3> {
+  ): Promise<DeliveryRequestedMessageV4> {
     const runId = randomUUID();
     const delivery = await pool.query(
       `SELECT attempt_count FROM deliveries WHERE id = $1`,
@@ -175,8 +187,14 @@ describe('delivery attempt state machine (integration)', () => {
         retryDelaysMs: [1, 1, 1, 1],
         maxAttempts,
         processingLeaseMs: 50,
-        sensitiveHeaders: ['authorization', 'cookie', 'set-cookie'],
+        sensitiveHeaders: [
+          'authorization',
+          'cookie',
+          'set-cookie',
+          'x-relayforge-signature',
+        ],
       },
+      signing: { encryptionKey: SIGNING_KEY },
     });
     const webhookSender = {
       send: jest.fn().mockImplementation(async () => results.shift()),
@@ -332,13 +350,37 @@ describe('delivery attempt state machine (integration)', () => {
       next_attempt_at: null,
     });
     const attempts = await pool.query(
-      `SELECT attempt_number, response_status, response_headers FROM delivery_attempts WHERE delivery_id = $1 ORDER BY attempt_number`,
+      `SELECT attempt_number, response_status, response_headers, request_headers FROM delivery_attempts WHERE delivery_id = $1 ORDER BY attempt_number`,
       [ids.deliveryId],
     );
     expect(attempts.rows).toHaveLength(2);
     expect(attempts.rows[0].response_headers['set-cookie']).toBe('[REDACTED]');
+    expect(attempts.rows[0].request_headers['X-RelayForge-Signature']).toBe(
+      '[REDACTED]',
+    );
+    const scheduledJson = JSON.stringify(scheduled);
+    expect(scheduledJson).toContain(SIGNING_ENVELOPE);
+    expect(scheduledJson).not.toContain(SIGNING_SECRET);
     const event = await pool.query(`SELECT status FROM events WHERE id = $1`, [ids.eventId]);
     expect(event.rows[0].status).toBe('COMPLETED');
+  });
+
+  it('fails closed before sending when v4 ciphertext cannot be authenticated', async () => {
+    const ids = await createDelivery();
+    const context = createService([result(true, 200)], 5);
+    const tampered = {
+      ...message(ids),
+      endpointSigningSecretEncrypted: 'v1.invalid.ciphertext.tag',
+    };
+    await expect(context.service.processDelivery(tampered)).rejects.toThrow(
+      'Signing-secret envelope could not be authenticated',
+    );
+    expect(context.webhookSender.send).not.toHaveBeenCalled();
+    const attempts = await pool.query(
+      `SELECT COUNT(*)::int AS count FROM delivery_attempts WHERE delivery_id = $1`,
+      [ids.deliveryId],
+    );
+    expect(attempts.rows[0].count).toBe(0);
   });
 
   it('exhausts five failed attempts without scheduling a sixth', async () => {

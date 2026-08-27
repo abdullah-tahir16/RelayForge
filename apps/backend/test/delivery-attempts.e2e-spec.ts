@@ -3,7 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import * as request from 'supertest';
 import { DataSource } from 'typeorm';
+import {
+  encryptSigningSecret,
+  hashSigningSecret,
+} from '@relayforge/webhook-signing';
 import { AppModule } from '../src/app.module';
+
+const SIGNING_KEY = Buffer.alloc(32, 6);
+const SIGNING_SECRET = 'rfs_delivery_attempts_e2e_secret';
+const SIGNING_ENVELOPE = encryptSigningSecret(SIGNING_SECRET, SIGNING_KEY);
 
 describe('Delivery attempt history API (e2e)', () => {
   let app: INestApplication;
@@ -51,8 +59,11 @@ describe('Delivery attempt history API (e2e)', () => {
     const deliveryId = randomUUID();
     const runId = randomUUID();
     await dataSource.query(
-      `INSERT INTO endpoints (id, project_id, name, url) VALUES ($1, $2, 'Attempts', 'https://example.com')`,
-      [endpointId, projectId],
+      `INSERT INTO endpoints (
+        id, project_id, name, url, signing_secret_encrypted,
+        signing_secret_hash, signing_secret_version, signing_secret_rotated_at
+      ) VALUES ($1, $2, 'Attempts', 'https://example.com', $3, $4, 1, now())`,
+      [endpointId, projectId, SIGNING_ENVELOPE, hashSigningSecret(SIGNING_SECRET)],
     );
     await dataSource.query(
       `INSERT INTO events (id, project_id, event_type, payload, status) VALUES ($1, $2, 'attempt.test', '{}', 'FAILED')`,

@@ -4,10 +4,14 @@ import { Repository } from 'typeorm';
 import { DisableEndpointCommand } from '../impl/disable-endpoint.command';
 import { EndpointEntity } from '../../entities/endpoint.entity';
 import { EndpointAuthorizationService } from '../../services/endpoint-authorization.service';
+import {
+  EndpointResponseDto,
+  toEndpointResponse,
+} from '../../dto/endpoint-response.dto';
 
 @CommandHandler(DisableEndpointCommand)
 export class DisableEndpointHandler
-  implements ICommandHandler<DisableEndpointCommand, EndpointEntity>
+  implements ICommandHandler<DisableEndpointCommand, EndpointResponseDto>
 {
   constructor(
     private readonly endpointAuthorizationService: EndpointAuthorizationService,
@@ -15,7 +19,7 @@ export class DisableEndpointHandler
     private readonly repository: Repository<EndpointEntity>,
   ) {}
 
-  async execute(command: DisableEndpointCommand): Promise<EndpointEntity> {
+  async execute(command: DisableEndpointCommand): Promise<EndpointResponseDto> {
     const endpoint = await this.endpointAuthorizationService.getOwnedEndpoint(
       command.userId,
       command.endpointId,
@@ -24,6 +28,6 @@ export class DisableEndpointHandler
     endpoint.enabled = false;
     endpoint.disabledAt = new Date();
 
-    return this.repository.save(endpoint);
+    return toEndpointResponse(await this.repository.save(endpoint));
   }
 }

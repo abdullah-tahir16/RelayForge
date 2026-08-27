@@ -65,6 +65,8 @@ services:
     environment:
       DATABASE_URL: postgres://relayforge:relayforge@postgres:5432/relayforge
       KAFKA_BROKERS: kafka:9092
+      # Development only. Generate a distinct 32-byte base64 key for production.
+      SIGNING_SECRET_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     ports:
       - "3000:3000"
 
@@ -78,6 +80,8 @@ services:
     environment:
       DATABASE_URL: postgres://relayforge:relayforge@postgres:5432/relayforge
       KAFKA_BROKERS: kafka:9092
+      # Must match the backend key; use deployment secret management in production.
+      SIGNING_SECRET_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
   frontend:
     build:

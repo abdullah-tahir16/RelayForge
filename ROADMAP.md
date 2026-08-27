@@ -18,7 +18,6 @@ A change should appear in exactly one section at a time (Planned items are not "
 Not yet proposed. Ordered by dependency — walking skeleton first (proves the end-to-end round trip in `documentation.md` §142 with the smallest real slice through every layer), then harden outward in the doc's existing v0.2→v0.5 order, split into changes smaller than the doc's monolithic per-version bundles.
 
 **Phase 3 — Security & Correctness** (doc v0.3)
-8. `hmac-signing-and-secret-rotation`
 9. `endpoint-test-delivery`
 10. `idempotency-keys`
 11. `ssrf-and-redirect-protection`
@@ -38,10 +37,9 @@ Not yet proposed. Ordered by dependency — walking skeleton first (proves the e
 
 ## Doing
 
-_(none)_
-
 ## Done
 
+- [hmac-signing-and-secret-rotation](openspec/changes/hmac-signing-and-secret-rotation/proposal.md) — encrypted endpoint signing secrets, one-time rotation disclosure, versioned secret snapshots for delivery runs, HMAC-SHA256 webhook signatures, and verification guidance.
 - [dead-letter-queue-and-replay](openspec/changes/dead-letter-queue-and-replay/proposal.md) — durable dead-letter publication, explicit initial/manual Delivery Runs, workspace-scoped DLQ visibility, and auditable single-delivery/event replay under the same logical Delivery.
 - [delivery-attempts-and-retries](openspec/changes/delivery-attempts-and-retries/proposal.md) — immutable delivery-attempt history, five-attempt staged Kafka retry schedule, retry-safe state transitions, attempt-history API, and dashboard visibility; completed by the durable DLQ and replay workflow above.
 - [bootstrap-monorepo-scaffolding](openspec/changes/bootstrap-monorepo-scaffolding/proposal.md) — monorepo skeleton, docker-compose infra, `LLM_CONTEXT.md`, and this roadmap itself.
