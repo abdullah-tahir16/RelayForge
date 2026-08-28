@@ -18,7 +18,6 @@ A change should appear in exactly one section at a time (Planned items are not "
 Not yet proposed. Ordered by dependency — walking skeleton first (proves the end-to-end round trip in `documentation.md` §142 with the smallest real slice through every layer), then harden outward in the doc's existing v0.2→v0.5 order, split into changes smaller than the doc's monolithic per-version bundles.
 
 **Phase 3 — Security & Correctness** (doc v0.3)
-9. `endpoint-test-delivery`
 10. `idempotency-keys`
 11. `ssrf-and-redirect-protection`
 
@@ -39,6 +38,7 @@ Not yet proposed. Ordered by dependency — walking skeleton first (proves the e
 
 ## Done
 
+- [endpoint-test-delivery](openspec/changes/endpoint-test-delivery/proposal.md) — endpoint detail test sends that create clearly marked synthetic Events and targeted Deliveries through the normal async signing/retry/attempt/DLQ pipeline.
 - [hmac-signing-and-secret-rotation](openspec/changes/hmac-signing-and-secret-rotation/proposal.md) — encrypted endpoint signing secrets, one-time rotation disclosure, versioned secret snapshots for delivery runs, HMAC-SHA256 webhook signatures, and verification guidance.
 - [dead-letter-queue-and-replay](openspec/changes/dead-letter-queue-and-replay/proposal.md) — durable dead-letter publication, explicit initial/manual Delivery Runs, workspace-scoped DLQ visibility, and auditable single-delivery/event replay under the same logical Delivery.
 - [delivery-attempts-and-retries](openspec/changes/delivery-attempts-and-retries/proposal.md) — immutable delivery-attempt history, five-attempt staged Kafka retry schedule, retry-safe state transitions, attempt-history API, and dashboard visibility; completed by the durable DLQ and replay workflow above.

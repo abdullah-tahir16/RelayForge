@@ -13,6 +13,8 @@ export interface EventListItem {
   createdAt: string;
   deliveryTotal: number;
   deliverySucceeded: number;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
 }
 
 export interface EventDetail {
@@ -23,6 +25,8 @@ export interface EventDetail {
   publishedAt: string | null;
   payload: Record<string, unknown>;
   metadata: Record<string, unknown> | null;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
 }
 
 export interface EventFilters {

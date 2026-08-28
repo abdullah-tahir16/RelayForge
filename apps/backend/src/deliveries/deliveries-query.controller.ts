@@ -12,7 +12,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserEntity } from '../auth/entities/user.entity';
-import { DeliveryEntity } from './entities/delivery.entity';
+import { DeliveryListItem } from './dto/delivery-list-item.dto';
 import { ListDeliveriesQueryDto } from './dto/list-deliveries-query.dto';
 import { GetDeliveriesQuery } from './queries/impl/get-deliveries.query';
 import { PaginatedResponse } from '../common/pagination/paginated-response.dto';
@@ -54,7 +54,7 @@ export class DeliveriesQueryController {
     @CurrentUser() user: UserEntity,
     @Param('projectId') projectId: string,
     @Query() filters: ListDeliveriesQueryDto,
-  ): Promise<PaginatedResponse<DeliveryEntity>> {
+  ): Promise<PaginatedResponse<DeliveryListItem>> {
     return this.queryBus.execute(
       new GetDeliveriesQuery(
         user.id,

@@ -2,6 +2,7 @@ import { apiClient } from '../client';
 import {
   Endpoint,
   EndpointCreated,
+  EndpointTestDelivery,
   SigningSecretRotated,
 } from '../../../core/types/Endpoint';
 import {
@@ -55,6 +56,15 @@ export async function rotateEndpointSigningSecret(
 ): Promise<SigningSecretRotated> {
   const response = await apiClient.post<SigningSecretRotated>(
     `/api/v1/endpoints/${endpointId}/signing-secret/rotate`,
+  );
+  return response.data;
+}
+
+export async function testEndpoint(
+  endpointId: string,
+): Promise<EndpointTestDelivery> {
+  const response = await apiClient.post<EndpointTestDelivery>(
+    `/api/v1/endpoints/${endpointId}/test`,
   );
   return response.data;
 }

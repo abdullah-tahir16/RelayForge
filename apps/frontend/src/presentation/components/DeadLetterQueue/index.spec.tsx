@@ -5,6 +5,7 @@ import DeadLetterQueue, { DeadLetterQueueProps } from '.';
 
 const item: DlqItem = {
   deliveryId: 'delivery-1', eventId: 'event-1', eventType: 'invoice.created',
+  isTest: false, testTargetEndpointId: null,
   endpointId: 'endpoint-1', endpointName: 'Billing webhook', endpointEnabled: true,
   runId: 'run-1', runNumber: 1, failureReason: 'HTTP_503', httpStatusCode: 503,
   attemptCount: 5, lastAttemptAt: '2026-08-23T10:00:00Z',
@@ -37,6 +38,25 @@ describe('DeadLetterQueue', () => {
     expect(value.onInspect).toHaveBeenCalledWith(item);
     expect(value.onReplayRequest).toHaveBeenCalledWith(item);
     expect(value.onDisableRequest).toHaveBeenCalledWith(item);
+  });
+
+  it('marks endpoint-test dead letters', () => {
+    render(
+      <DeadLetterQueue
+        {...props({
+          rows: [
+            {
+              ...item,
+              eventType: 'relayforge.endpoint.test',
+              isTest: true,
+              testTargetEndpointId: 'endpoint-1',
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Test')).toBeInTheDocument();
   });
 
   it('shows loading, error, empty, and replay confirmation states', () => {

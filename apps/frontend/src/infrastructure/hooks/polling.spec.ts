@@ -25,6 +25,8 @@ const delivery = (status: Delivery['status']): Delivery => ({
   nextAttemptAt: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  isTest: false,
+  testTargetEndpointId: null,
 });
 
 describe('DLQ and run polling visibility', () => {
@@ -73,6 +75,8 @@ const event = (status: EventListItem['status']): EventListItem => ({
   createdAt: new Date().toISOString(),
   deliveryTotal: 1,
   deliverySucceeded: 0,
+  isTest: false,
+  testTargetEndpointId: null,
 });
 
 describe('conditional dashboard polling', () => {

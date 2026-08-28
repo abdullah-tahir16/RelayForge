@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import * as request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
-import { EventEntity } from '../src/events/entities/event.entity';
+import { EventEntity, EventSource } from '../src/events/entities/event.entity';
 import { DeliveryEntity } from '../src/deliveries/entities/delivery.entity';
 import { RouteEventCommand } from '../src/deliveries/commands/impl/route-event.command';
 import { DeliveryRunEntity } from '../src/deliveries/entities/delivery-run.entity';
@@ -228,6 +228,103 @@ describe('Events pipeline (e2e)', () => {
     expect(received.headers['x-relayforge-event']).toBe('order.completed');
     expect(received.headers['x-relayforge-delivery-id']).toBe(deliveries[0].id);
     expect(JSON.parse(received.body).event).toBe('order.completed');
+  }, 20000);
+
+  it('sends an endpoint test delivery through the normal signed delivery path', async () => {
+    const { token, projectId } = await setupProjectWithKey();
+    const path = `/endpoint-test-${randomUUID()}`;
+    const endpointId = await createEndpoint(token, projectId, path);
+
+    const response = await request(app.getHttpServer())
+      .post(`/api/v1/endpoints/${endpointId}/test`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(202);
+
+    expect(response.body).toMatchObject({
+      status: 'started',
+      runNumber: 1,
+    });
+    expect(response.body.eventId).toBeDefined();
+    expect(response.body.deliveryId).toBeDefined();
+    expect(response.body.runId).toBeDefined();
+
+    await waitFor(async () => {
+      const delivery = await dataSource
+        .getRepository(DeliveryEntity)
+        .findOne({ where: { id: response.body.deliveryId } });
+      return delivery?.status === 'SUCCEEDED';
+    });
+
+    const event = await dataSource
+      .getRepository(EventEntity)
+      .findOneOrFail({ where: { id: response.body.eventId } });
+    expect(event).toMatchObject({
+      projectId,
+      eventType: 'relayforge.endpoint.test',
+      source: EventSource.ENDPOINT_TEST,
+      testTargetEndpointId: endpointId,
+      status: 'COMPLETED',
+    });
+
+    const deliveries = await dataSource
+      .getRepository(DeliveryEntity)
+      .find({ where: { eventId: event.id } });
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]).toMatchObject({
+      id: response.body.deliveryId,
+      endpointId,
+      status: 'SUCCEEDED',
+      currentRunId: response.body.runId,
+    });
+
+    const detailResponse = await request(app.getHttpServer())
+      .get(`/api/v1/events/${event.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(detailResponse.body).toMatchObject({
+      id: event.id,
+      isTest: true,
+      testTargetEndpointId: endpointId,
+    });
+
+    const eventsResponse = await request(app.getHttpServer())
+      .get(`/api/v1/projects/${projectId}/events?endpointId=${endpointId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const listedEvent = eventsResponse.body.items.find(
+      (item: any) => item.id === event.id,
+    );
+    expect(listedEvent).toMatchObject({
+      isTest: true,
+      testTargetEndpointId: endpointId,
+    });
+
+    const deliveriesResponse = await request(app.getHttpServer())
+      .get(`/api/v1/projects/${projectId}/deliveries?eventId=${event.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(deliveriesResponse.body.items[0]).toMatchObject({
+      id: response.body.deliveryId,
+      isTest: true,
+      testTargetEndpointId: endpointId,
+    });
+
+    const [received] = webhookServer.received.get(path)!;
+    expect(received.headers['x-relayforge-event']).toBe(
+      'relayforge.endpoint.test',
+    );
+    expect(received.headers['x-relayforge-delivery-id']).toBe(
+      response.body.deliveryId,
+    );
+    expect(received.headers['x-relayforge-signature']).toMatch(/^v1=/);
+    expect(JSON.parse(received.body)).toMatchObject({
+      id: response.body.eventId,
+      event: 'relayforge.endpoint.test',
+      data: {
+        message: 'RelayForge endpoint test delivery',
+        endpointId,
+      },
+    });
   }, 20000);
 
   it('does not deliver to a disabled endpoint even if subscribed', async () => {

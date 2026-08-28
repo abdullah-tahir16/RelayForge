@@ -7,4 +7,6 @@ export interface EventListItem {
   createdAt: Date;
   deliveryTotal: number;
   deliverySucceeded: number;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
 }

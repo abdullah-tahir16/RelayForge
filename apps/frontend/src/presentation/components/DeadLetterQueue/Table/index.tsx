@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography';
 import { DlqItem } from '../../../../core/types/Delivery';
 import AppButton from '../../App/AppButton';
 import AppTable, { AppTableColumn } from '../../App/AppTable';
+import AppChip from '../../App/AppChip';
 
 export interface DeadLetterTableProps {
   rows: DlqItem[];
@@ -23,7 +24,10 @@ function columns(props: Pick<DeadLetterTableProps, 'onInspect' | 'onReplay' | 'o
       header: 'Event',
       render: (row) => (
         <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={600}>{row.eventType}</Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="body2" fontWeight={600}>{row.eventType}</Typography>
+            {row.isTest && <AppChip status="PUBLISHED" label="Test" size="small" />}
+          </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
             {row.eventId}
           </Typography>

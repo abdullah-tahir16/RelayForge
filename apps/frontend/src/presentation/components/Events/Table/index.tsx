@@ -1,3 +1,4 @@
+import Stack from '@mui/material/Stack';
 import AppTable, { AppTableColumn } from '../../App/AppTable';
 import AppChip from '../../App/AppChip';
 import { EventListItem } from '../../../../core/types/Event';
@@ -13,7 +14,16 @@ export interface TableProps {
 }
 
 const columns: AppTableColumn<EventListItem>[] = [
-  { key: 'event', header: 'Event', render: (row) => row.event },
+  {
+    key: 'event',
+    header: 'Event',
+    render: (row) => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <span>{row.event}</span>
+        {row.isTest && <AppChip status="PUBLISHED" label="Test" size="small" />}
+      </Stack>
+    ),
+  },
   {
     key: 'createdAt',
     header: 'Created',

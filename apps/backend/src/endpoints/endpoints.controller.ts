@@ -34,6 +34,8 @@ import {
   SigningSecretRotatedResponseDto,
 } from './dto/endpoint-response.dto';
 import { RotateSigningSecretCommand } from './commands/impl/rotate-signing-secret.command';
+import { TestEndpointCommand } from './commands/impl/test-endpoint.command';
+import { EndpointTestDeliveryResponseDto } from './dto/endpoint-test-delivery-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -137,6 +139,15 @@ export class EndpointsController {
     return this.commandBus.execute(
       new RotateSigningSecretCommand(user.id, id),
     );
+  }
+
+  @Post('api/v1/endpoints/:id/test')
+  @HttpCode(HttpStatus.ACCEPTED)
+  testEndpoint(
+    @CurrentUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<EndpointTestDeliveryResponseDto> {
+    return this.commandBus.execute(new TestEndpointCommand(user.id, id));
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

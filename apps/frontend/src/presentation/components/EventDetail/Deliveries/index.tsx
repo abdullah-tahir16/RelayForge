@@ -1,3 +1,4 @@
+import Stack from '@mui/material/Stack';
 import AppTable, { AppTableColumn } from '../../App/AppTable';
 import AppChip from '../../App/AppChip';
 import { Delivery } from '../../../../core/types/Delivery';
@@ -13,7 +14,16 @@ const createColumns = (
   onInspect: (delivery: Delivery) => void,
   onReplay: (delivery: Delivery) => void,
 ): AppTableColumn<Delivery>[] => [
-  { key: 'endpointId', header: 'Endpoint', render: (row) => row.endpointId },
+  {
+    key: 'endpointId',
+    header: 'Endpoint',
+    render: (row) => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <span>{row.endpointId}</span>
+        {row.isTest && <AppChip status="PUBLISHED" label="Test" size="small" />}
+      </Stack>
+    ),
+  },
   {
     key: 'status',
     header: 'Status',

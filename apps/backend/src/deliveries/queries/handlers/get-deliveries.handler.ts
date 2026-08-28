@@ -5,15 +5,18 @@ import { Repository } from 'typeorm';
 import { GetDeliveriesQuery } from '../impl/get-deliveries.query';
 import { DeliveryEntity } from '../../entities/delivery.entity';
 import { EndpointEntity } from '../../../endpoints/entities/endpoint.entity';
+import { EventEntity } from '../../../events/entities/event.entity';
 import { ProjectsRepository } from '../../../projects/repositories/projects.repository';
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
 import { paginateQueryBuilder } from '../../../common/pagination/paginate';
 import { PaginatedResponse } from '../../../common/pagination/paginated-response.dto';
+import { DeliveryListItem } from '../../dto/delivery-list-item.dto';
+import { endpointTestTargetId } from '../../../events/services/event-source';
 
 @QueryHandler(GetDeliveriesQuery)
 export class GetDeliveriesHandler
   implements
-    IQueryHandler<GetDeliveriesQuery, PaginatedResponse<DeliveryEntity>>
+    IQueryHandler<GetDeliveriesQuery, PaginatedResponse<DeliveryListItem>>
 {
   constructor(
     private readonly workspacesService: WorkspacesService,
@@ -24,7 +27,7 @@ export class GetDeliveriesHandler
 
   async execute(
     query: GetDeliveriesQuery,
-  ): Promise<PaginatedResponse<DeliveryEntity>> {
+  ): Promise<PaginatedResponse<DeliveryListItem>> {
     const workspaceId = await this.workspacesService.getWorkspaceIdForUser(
       query.userId,
     );
@@ -69,6 +72,29 @@ export class GetDeliveriesHandler
       });
     }
 
-    return paginateQueryBuilder(qb, query.page, query.pageSize);
+    const page = await paginateQueryBuilder(qb, query.page, query.pageSize);
+    if (page.items.length === 0) {
+      return { ...page, items: [] };
+    }
+
+    const events = await this.repository.manager.find(EventEntity, {
+      where: page.items.map((delivery) => ({ id: delivery.eventId })),
+    });
+    const eventById = new Map(events.map((event) => [event.id, event]));
+
+    return {
+      ...page,
+      items: page.items.map((delivery) => {
+        const event = eventById.get(delivery.eventId);
+        const testTargetEndpointId = event
+          ? endpointTestTargetId(event)
+          : null;
+        return {
+          ...delivery,
+          isTest: testTargetEndpointId !== null,
+          testTargetEndpointId,
+        };
+      }),
+    };
   }
 }

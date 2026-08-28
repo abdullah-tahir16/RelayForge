@@ -58,6 +58,7 @@ const EventDetail = ({
       <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
         <Typography variant="h5">{event.event}</Typography>
         <AppChip status={event.status} label={event.status} />
+        {event.isTest && <AppChip status="PUBLISHED" label="Test delivery" />}
         <AppButton variant="outlined" onClick={onReplayEventRequest}>
           Replay failed deliveries
         </AppButton>

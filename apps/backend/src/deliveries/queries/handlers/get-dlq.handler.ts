@@ -56,6 +56,8 @@ export class GetDlqHandler
       .select('delivery.id', 'deliveryId')
       .addSelect('event.id', 'eventId')
       .addSelect('event.event_type', 'eventType')
+      .addSelect(`event.source = 'ENDPOINT_TEST'`, 'isTest')
+      .addSelect('event.test_target_endpoint_id', 'testTargetEndpointId')
       .addSelect('endpoint.id', 'endpointId')
       .addSelect('endpoint.name', 'endpointName')
       .addSelect('endpoint.enabled', 'endpointEnabled')
@@ -83,6 +85,8 @@ export class GetDlqHandler
     return {
       items: rows.map((row) => ({
         ...row,
+        isTest: row.isTest === true || row.isTest === 'true',
+        testTargetEndpointId: row.testTargetEndpointId ?? null,
         endpointEnabled: Boolean(row.endpointEnabled),
         runNumber: Number(row.runNumber),
         httpStatusCode:

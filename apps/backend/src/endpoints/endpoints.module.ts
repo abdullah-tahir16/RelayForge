@@ -19,6 +19,8 @@ import { GetEndpointHandler } from './queries/handlers/get-endpoint.handler';
 import { GetEndpointsLookupHandler } from './queries/handlers/get-endpoints-lookup.handler';
 import { EndpointSigningMaterialService } from './services/endpoint-signing-material.service';
 import { RotateSigningSecretHandler } from './commands/handlers/rotate-signing-secret.handler';
+import { TestEndpointHandler } from './commands/handlers/test-endpoint.handler';
+import { KafkaModule } from '../kafka/kafka.module';
 
 const commandHandlers = [
   RegisterEndpointHandler,
@@ -27,6 +29,7 @@ const commandHandlers = [
   DisableEndpointHandler,
   DeleteEndpointHandler,
   RotateSigningSecretHandler,
+  TestEndpointHandler,
 ];
 const queryHandlers = [
   GetEndpointsHandler,
@@ -40,6 +43,7 @@ const queryHandlers = [
     PassportModule,
     WorkspacesModule,
     ProjectsModule,
+    KafkaModule,
     TypeOrmModule.forFeature([EndpointEntity]),
   ],
   controllers: [EndpointsController],

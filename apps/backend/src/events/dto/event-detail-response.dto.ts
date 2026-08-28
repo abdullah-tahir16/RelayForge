@@ -1,4 +1,5 @@
 import { EventEntity, EventStatus } from '../entities/event.entity';
+import { endpointTestTargetId } from '../services/event-source';
 
 export interface EventDetailResponse {
   id: string;
@@ -8,11 +9,14 @@ export interface EventDetailResponse {
   publishedAt: Date | null;
   payload: Record<string, unknown>;
   metadata: Record<string, unknown> | null;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
 }
 
 export function toEventDetailResponse(
   entity: EventEntity,
 ): EventDetailResponse {
+  const testTargetEndpointId = endpointTestTargetId(entity);
   return {
     id: entity.id,
     event: entity.eventType,
@@ -21,5 +25,7 @@ export function toEventDetailResponse(
     publishedAt: entity.publishedAt,
     payload: entity.payload,
     metadata: entity.metadata,
+    isTest: testTargetEndpointId !== null,
+    testTargetEndpointId,
   };
 }

@@ -15,6 +15,11 @@ export enum EventStatus {
   FAILED = 'FAILED',
 }
 
+export enum EventSource {
+  CUSTOMER = 'CUSTOMER',
+  ENDPOINT_TEST = 'ENDPOINT_TEST',
+}
+
 @Entity({ name: 'events' })
 export class EventEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -32,6 +37,18 @@ export class EventEntity {
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, unknown> | null;
+
+  @Column({
+    type: 'enum',
+    enum: EventSource,
+    enumName: 'events_source_enum',
+    default: EventSource.CUSTOMER,
+  })
+  source: EventSource;
+
+  @Column({ type: 'uuid', name: 'test_target_endpoint_id', nullable: true })
+  @Index()
+  testTargetEndpointId: string | null;
 
   @Column({
     type: 'enum',

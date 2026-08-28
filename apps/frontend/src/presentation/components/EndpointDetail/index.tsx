@@ -7,6 +7,7 @@ import { Endpoint, SigningSecretRotated } from '../../../core/types/Endpoint';
 import { Subscription } from '../../../core/types/Subscription';
 import SigningSecret from './SigningSecret';
 import OneTimeSecretDialog from '../SigningSecret';
+import AppButton from '../App/AppButton';
 
 export interface EndpointDetailProps {
   endpoint: Endpoint;
@@ -15,7 +16,9 @@ export interface EndpointDetailProps {
   onUnsubscribe: (subscription: Subscription) => void;
   rotationConfirmationOpen: boolean;
   isRotating: boolean;
+  isTesting: boolean;
   oneTimeSecret: SigningSecretRotated | null;
+  onTestEndpoint: () => void;
   onRequestRotate: () => void;
   onConfirmRotate: () => void;
   onCancelRotate: () => void;
@@ -29,7 +32,9 @@ const EndpointDetail = ({
   onUnsubscribe,
   rotationConfirmationOpen,
   isRotating,
+  isTesting,
   oneTimeSecret,
+  onTestEndpoint,
   onRequestRotate,
   onConfirmRotate,
   onCancelRotate,
@@ -40,9 +45,22 @@ const EndpointDetail = ({
       <Typography variant="h5">{endpoint.name}</Typography>
 
       <section>
-        <Typography variant="subtitle1" mb={1}>
-          Configuration
-        </Typography>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={1}
+          mb={1}
+        >
+          <Typography variant="subtitle1">Configuration</Typography>
+          <AppButton
+            variant="outlined"
+            onClick={onTestEndpoint}
+            disabled={isTesting}
+          >
+            Test delivery
+          </AppButton>
+        </Stack>
         <Configuration endpoint={endpoint} />
       </section>
 

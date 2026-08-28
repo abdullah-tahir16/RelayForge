@@ -2,6 +2,8 @@ export class DlqItemResponseDto {
   deliveryId: string;
   eventId: string;
   eventType: string;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
   endpointId: string;
   endpointName: string;
   endpointEnabled: boolean;

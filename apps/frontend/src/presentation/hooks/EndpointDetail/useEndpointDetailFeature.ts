@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useGetEndpoint } from '../../../infrastructure/hooks/Endpoint/useGetEndpoint';
 import { useGetSubscriptions } from '../../../infrastructure/hooks/Subscription/useGetSubscriptions';
 import { useSubscribe } from '../../../infrastructure/hooks/Subscription/useSubscribe';
@@ -10,9 +11,11 @@ import { SubscribeFormValues } from '../../components/EndpointDetail/Subscriptio
 import { SUBSCRIPTIONS_PAGE_SIZE } from './consts';
 import { useRotateEndpointSigningSecret } from '../../../infrastructure/hooks/Endpoint/useRotateEndpointSigningSecret';
 import { SigningSecretRotated } from '../../../core/types/Endpoint';
+import { useTestEndpoint } from '../../../infrastructure/hooks/Endpoint/useTestEndpoint';
 
 export function useEndpointDetailFeature() {
   const { endpointId = '' } = useParams<{ endpointId: string }>();
+  const navigate = useNavigate();
   const toast = useToast();
 
   const endpointQuery = useGetEndpoint(endpointId);
@@ -23,6 +26,10 @@ export function useEndpointDetailFeature() {
   const subscribeMutation = useSubscribe(endpointId);
   const unsubscribeMutation = useUnsubscribe(endpointId);
   const rotateMutation = useRotateEndpointSigningSecret(endpointId);
+  const testMutation = useTestEndpoint(
+    endpointQuery.data?.projectId ?? '',
+    endpointId,
+  );
   const [rotationConfirmationOpen, setRotationConfirmationOpen] =
     useState(false);
   const [oneTimeSecret, setOneTimeSecret] =
@@ -60,6 +67,26 @@ export function useEndpointDetailFeature() {
     }
   }
 
+  async function onTestEndpoint(): Promise<void> {
+    if (!endpointQuery.data) return;
+    if (!endpointQuery.data.enabled) {
+      toast.error('Disabled endpoints cannot receive test deliveries');
+      return;
+    }
+
+    try {
+      const result = await testMutation.mutateAsync();
+      toast.success('Test delivery started');
+      navigate(`/events/${result.eventId}?deliveryId=${result.deliveryId}`);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        toast.error('Disabled endpoints cannot receive test deliveries');
+        return;
+      }
+      toast.error('Could not start endpoint test delivery');
+    }
+  }
+
   return {
     endpoint: endpointQuery.data,
     isLoading: endpointQuery.isLoading,
@@ -68,7 +95,9 @@ export function useEndpointDetailFeature() {
     onUnsubscribe,
     rotationConfirmationOpen,
     isRotating: rotateMutation.isPending,
+    isTesting: testMutation.isPending,
     oneTimeSecret,
+    onTestEndpoint,
     onRequestRotate: () => setRotationConfirmationOpen(true),
     onConfirmRotate,
     onCancelRotate: () => setRotationConfirmationOpen(false),

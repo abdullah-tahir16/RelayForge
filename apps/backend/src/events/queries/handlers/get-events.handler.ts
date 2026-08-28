@@ -10,6 +10,7 @@ import { ProjectsRepository } from '../../../projects/repositories/projects.repo
 import { WorkspacesService } from '../../../workspaces/services/workspaces.service';
 import { paginateQueryBuilder } from '../../../common/pagination/paginate';
 import { PaginatedResponse } from '../../../common/pagination/paginated-response.dto';
+import { endpointTestTargetId } from '../../services/event-source';
 
 @QueryHandler(GetEventsQuery)
 export class GetEventsHandler
@@ -102,13 +103,18 @@ export class GetEventsHandler
       ]),
     );
 
-    return events.map((event) => ({
-      id: event.id,
-      event: event.eventType,
-      status: event.status,
-      createdAt: event.createdAt,
-      deliveryTotal: countsByEventId.get(event.id)?.total ?? 0,
-      deliverySucceeded: countsByEventId.get(event.id)?.succeeded ?? 0,
-    }));
+    return events.map((event) => {
+      const testTargetEndpointId = endpointTestTargetId(event);
+      return {
+        id: event.id,
+        event: event.eventType,
+        status: event.status,
+        createdAt: event.createdAt,
+        deliveryTotal: countsByEventId.get(event.id)?.total ?? 0,
+        deliverySucceeded: countsByEventId.get(event.id)?.succeeded ?? 0,
+        isTest: testTargetEndpointId !== null,
+        testTargetEndpointId,
+      };
+    });
   }
 }

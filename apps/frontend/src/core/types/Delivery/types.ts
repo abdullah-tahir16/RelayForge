@@ -29,6 +29,8 @@ export interface Delivery {
   nextAttemptAt: string | null;
   createdAt: string;
   updatedAt: string;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
 }
 
 export interface DeliveryAttempt {
@@ -78,6 +80,8 @@ export interface DlqItem {
   deliveryId: string;
   eventId: string;
   eventType: string;
+  isTest: boolean;
+  testTargetEndpointId: string | null;
   endpointId: string;
   endpointName: string;
   endpointEnabled: boolean;

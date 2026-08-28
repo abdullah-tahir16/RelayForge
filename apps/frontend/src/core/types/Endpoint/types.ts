@@ -23,6 +23,14 @@ export interface SigningSecretRotated {
   rotatedAt: string;
 }
 
+export interface EndpointTestDelivery {
+  eventId: string;
+  deliveryId: string;
+  runId: string;
+  runNumber: number;
+  status: 'started';
+}
+
 export interface EndpointLookupItem {
   id: string;
   name: string;

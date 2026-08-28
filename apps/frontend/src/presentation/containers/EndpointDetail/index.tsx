@@ -19,7 +19,9 @@ const EndpointDetailContainer = () => {
       onUnsubscribe={onUnsubscribe}
       rotationConfirmationOpen={feature.rotationConfirmationOpen}
       isRotating={feature.isRotating}
+      isTesting={feature.isTesting}
       oneTimeSecret={feature.oneTimeSecret}
+      onTestEndpoint={feature.onTestEndpoint}
       onRequestRotate={feature.onRequestRotate}
       onConfirmRotate={feature.onConfirmRotate}
       onCancelRotate={feature.onCancelRotate}

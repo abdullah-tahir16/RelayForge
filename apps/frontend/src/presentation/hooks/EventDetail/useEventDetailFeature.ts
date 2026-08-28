@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useGetEvent } from '../../../infrastructure/hooks/Event/useGetEvent';
 import { useGetDeliveries } from '../../../infrastructure/hooks/Delivery/useGetDeliveries';
 import { useProjectUseCase } from '../../../infrastructure/useCases/Project/useProjectUseCase';
@@ -18,6 +19,7 @@ import { replayFailureMessage } from '../DeadLetterQueue/useDeadLetterQueueFeatu
 
 export function useEventDetailFeature() {
   const { eventId = '' } = useParams<{ eventId: string }>();
+  const [searchParams] = useSearchParams();
   const { selectedProjectId } = useProjectUseCase();
   const toast = useToast();
   const [isRawView, setIsRawView] = useState(false);
@@ -34,6 +36,13 @@ export function useEventDetailFeature() {
   const deliveries = deliveriesQuery.data?.items ?? [];
   const selectedDelivery =
     deliveries.find((delivery) => delivery.id === selectedDeliveryId) ?? null;
+
+  useEffect(() => {
+    const deliveryId = searchParams.get('deliveryId');
+    if (deliveryId && deliveries.some((delivery) => delivery.id === deliveryId)) {
+      setSelectedDeliveryId(deliveryId);
+    }
+  }, [deliveries, searchParams]);
   const attemptsQuery = useGetDeliveryAttempts(
     selectedDeliveryId,
     Boolean(
