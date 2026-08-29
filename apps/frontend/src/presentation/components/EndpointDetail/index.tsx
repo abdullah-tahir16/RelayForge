@@ -8,6 +8,9 @@ import { Subscription } from '../../../core/types/Subscription';
 import SigningSecret from './SigningSecret';
 import OneTimeSecretDialog from '../SigningSecret';
 import AppButton from '../App/AppButton';
+import AppPageHeader from '../App/AppPageHeader';
+import AppSurface from '../App/AppSurface';
+import AppChip from '../App/AppChip';
 
 export interface EndpointDetailProps {
   endpoint: Endpoint;
@@ -42,9 +45,28 @@ const EndpointDetail = ({
 }: EndpointDetailProps) => {
   return (
     <Stack spacing={3}>
-      <Typography variant="h5">{endpoint.name}</Typography>
+      <AppPageHeader
+        eyebrow="Endpoint detail"
+        title={endpoint.name}
+        description="Verify receiver configuration, rotate signing secrets, send test deliveries, and manage event subscriptions."
+        actions={
+          <>
+            <AppChip
+              status={endpoint.enabled ? 'ENABLED' : 'DISABLED'}
+              label={endpoint.enabled ? 'Enabled' : 'Disabled'}
+            />
+            <AppButton
+              variant="outlined"
+              onClick={onTestEndpoint}
+              loading={isTesting}
+            >
+              Test delivery
+            </AppButton>
+          </>
+        }
+      />
 
-      <section>
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           alignItems={{ xs: 'flex-start', sm: 'center' }}
@@ -53,18 +75,11 @@ const EndpointDetail = ({
           mb={1}
         >
           <Typography variant="subtitle1">Configuration</Typography>
-          <AppButton
-            variant="outlined"
-            onClick={onTestEndpoint}
-            disabled={isTesting}
-          >
-            Test delivery
-          </AppButton>
         </Stack>
         <Configuration endpoint={endpoint} />
-      </section>
+      </AppSurface>
 
-      <section>
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Typography variant="subtitle1" mb={1}>
           Signing Secret
         </Typography>
@@ -77,7 +92,7 @@ const EndpointDetail = ({
           onConfirmRotate={onConfirmRotate}
           onCancelRotate={onCancelRotate}
         />
-      </section>
+      </AppSurface>
 
       <OneTimeSecretDialog
         open={Boolean(oneTimeSecret)}
@@ -88,7 +103,7 @@ const EndpointDetail = ({
         onAcknowledge={onOneTimeSecretAcknowledge}
       />
 
-      <section>
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Typography variant="subtitle1" mb={1}>
           Subscriptions
         </Typography>
@@ -97,7 +112,7 @@ const EndpointDetail = ({
           onSubscribe={onSubscribe}
           onUnsubscribe={onUnsubscribe}
         />
-      </section>
+      </AppSurface>
     </Stack>
   );
 };

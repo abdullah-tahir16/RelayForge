@@ -1,8 +1,8 @@
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import AppButton from '../../App/AppButton';
+import AppCodeBlock from '../../App/AppCodeBlock';
 import { formatPayloadPretty, formatPayloadRaw } from './fns';
 
 export interface PayloadProps {
@@ -17,34 +17,30 @@ const Payload = ({ payload, isRawView, onToggleRawView, onCopy }: PayloadProps) 
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" justifyContent="space-between">
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        spacing={1.5}
+      >
         <ToggleButtonGroup
           size="small"
           exclusive
           value={isRawView ? 'raw' : 'pretty'}
+          aria-label="Payload view mode"
           onChange={(_event, value) => value && onToggleRawView(value === 'raw')}
         >
-          <ToggleButton value="pretty">Pretty</ToggleButton>
-          <ToggleButton value="raw">Raw</ToggleButton>
+          <ToggleButton value="pretty" aria-label="Show formatted payload">
+            Pretty
+          </ToggleButton>
+          <ToggleButton value="raw" aria-label="Show raw payload">
+            Raw
+          </ToggleButton>
         </ToggleButtonGroup>
-        <AppButton size="small" onClick={onCopy}>
+        <AppButton size="small" variant="outlined" onClick={onCopy}>
           Copy
         </AppButton>
       </Stack>
-      <Box
-        component="pre"
-        sx={{
-          m: 0,
-          p: 2,
-          bgcolor: 'grey.100',
-          borderRadius: 1,
-          overflow: 'auto',
-          maxHeight: 400,
-          fontSize: 13,
-        }}
-      >
-        {text}
-      </Box>
+      <AppCodeBlock ariaLabel="Event payload">{text}</AppCodeBlock>
     </Stack>
   );
 };

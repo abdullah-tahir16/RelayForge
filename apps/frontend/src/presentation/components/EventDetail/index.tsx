@@ -1,6 +1,9 @@
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AppChip from '../App/AppChip';
+import AppKeyValueGrid from '../App/AppKeyValueGrid';
+import AppPageHeader from '../App/AppPageHeader';
+import AppSurface from '../App/AppSurface';
 import Payload from './Payload';
 import Deliveries from './Deliveries';
 import Timeline from './Timeline';
@@ -55,19 +58,36 @@ const EventDetail = ({
 }: EventDetailProps) => {
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
-        <Typography variant="h5">{event.event}</Typography>
-        <AppChip status={event.status} label={event.status} />
-        {event.isTest && <AppChip status="PUBLISHED" label="Test delivery" />}
-        <AppButton variant="outlined" onClick={onReplayEventRequest}>
-          Replay failed deliveries
-        </AppButton>
-      </Stack>
-      <Typography variant="body2" color="text.secondary">
-        Created {new Date(event.createdAt).toLocaleString()}
-      </Typography>
+      <AppPageHeader
+        eyebrow={event.isTest ? 'Synthetic event' : 'Event detail'}
+        title={event.event}
+        description="Inspect payload, delivery outcomes, run history, and replayable failures for this event."
+        actions={
+          <>
+            <AppChip status={event.status} label={event.status} />
+            {event.isTest && <AppChip status="TEST" label="Test delivery" />}
+            <AppButton variant="outlined" onClick={onReplayEventRequest}>
+              Replay failed deliveries
+            </AppButton>
+          </>
+        }
+      />
 
-      <section>
+      <AppKeyValueGrid
+        items={[
+          { label: 'Created', value: new Date(event.createdAt).toLocaleString() },
+          {
+            label: 'Published',
+            value: event.publishedAt
+              ? new Date(event.publishedAt).toLocaleString()
+              : 'Not published',
+          },
+          { label: 'Deliveries', value: deliveries.length },
+          { label: 'Event ID', value: <Typography component="code">{event.id}</Typography> },
+        ]}
+      />
+
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Typography variant="subtitle1" mb={1}>
           Payload
         </Typography>
@@ -77,9 +97,9 @@ const EventDetail = ({
           onToggleRawView={onToggleRawView}
           onCopy={onCopyPayload}
         />
-      </section>
+      </AppSurface>
 
-      <section>
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Typography variant="subtitle1" mb={1}>
           Deliveries
         </Typography>
@@ -88,10 +108,10 @@ const EventDetail = ({
           onInspect={onInspectDelivery}
           onReplay={onReplayDeliveryRequest}
         />
-      </section>
+      </AppSurface>
 
       {selectedDelivery && (
-        <section>
+        <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
           <Typography variant="subtitle1" mb={1} sx={{ overflowWrap: 'anywhere' }}>
             Run history for delivery {selectedDelivery.id}
           </Typography>
@@ -101,15 +121,15 @@ const EventDetail = ({
             isLoading={inspectorLoading}
             isError={inspectorError}
           />
-        </section>
+        </AppSurface>
       )}
 
-      <section>
+      <AppSurface component="section" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Typography variant="subtitle1" mb={1}>
           Timeline
         </Typography>
         <Timeline event={event} deliveries={deliveries} />
-      </section>
+      </AppSurface>
 
       <AppConfirmDialog
         open={Boolean(replayDeliveryTarget)}

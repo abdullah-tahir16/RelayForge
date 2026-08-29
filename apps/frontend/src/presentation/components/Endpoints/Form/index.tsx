@@ -2,6 +2,7 @@ import { Form as FinalForm } from 'react-final-form';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import FormTextField from '../../Form/FormTextField';
 import FormNumberField from '../../Form/FormNumberField';
 import AppButton from '../../App/AppButton';
@@ -40,15 +41,21 @@ const Form = ({
           onClose={onCancel}
           actions={
             <>
-              <Button onClick={onCancel}>Cancel</Button>
-              <AppButton onClick={() => handleSubmit()} disabled={isSubmitting}>
-                Save
+              <Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <AppButton onClick={() => handleSubmit()} loading={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save endpoint'}
               </AppButton>
             </>
           }
         >
           <Stack spacing={2} mt={1} component="form" onSubmit={handleSubmit}>
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+            <Typography variant="body2" color="text.secondary">
+              Use a public HTTPS receiver URL. RelayForge will sign deliveries
+              and enforce the configured timeout per attempt.
+            </Typography>
             <FormTextField name="name" label="Name" />
             <FormTextField name="url" label="URL" />
             <FormTextField name="description" label="Description" />

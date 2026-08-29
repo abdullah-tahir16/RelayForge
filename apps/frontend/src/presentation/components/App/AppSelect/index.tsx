@@ -12,7 +12,7 @@ export interface AppSelectProps extends Omit<TextFieldProps, 'select'> {
 
 const AppSelect = ({ options, ...props }: AppSelectProps) => {
   return (
-    <TextField select size="small" fullWidth {...props}>
+    <TextField select size="small" fullWidth margin="dense" {...props}>
       {options.map((option) => (
         <MenuItem key={option.value} value={option.value}>
           {option.label}

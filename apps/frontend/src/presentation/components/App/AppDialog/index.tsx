@@ -3,6 +3,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import { ReactNode } from 'react';
+import { alpha } from '@mui/material/styles';
+import { relayForgeTokens } from '../../../../theme/theme';
 
 export interface AppDialogProps {
   open: boolean;
@@ -28,10 +30,27 @@ const AppDialog = ({
       disableEscapeKeyDown={!dismissible}
       maxWidth="sm"
       fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+        },
+      }}
     >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent>{children}</DialogContent>
-      {actions && <DialogActions>{actions}</DialogActions>}
+      <DialogTitle sx={{ pb: 1, fontWeight: 800 }}>{title}</DialogTitle>
+      <DialogContent
+        sx={{
+          color: 'text.secondary',
+          borderTop: `1px solid ${alpha(relayForgeTokens.color.borderStrong, 0.36)}`,
+          pt: 2,
+        }}
+      >
+        {children}
+      </DialogContent>
+      {actions && (
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
+          {actions}
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

@@ -1,7 +1,9 @@
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import AppTable, { AppTableColumn } from '../../App/AppTable';
 import AppChip from '../../App/AppChip';
 import { EventListItem } from '../../../../core/types/Event';
+import { relayForgeTokens } from '../../../../theme/theme';
 
 export interface TableProps {
   rows: EventListItem[];
@@ -18,16 +20,31 @@ const columns: AppTableColumn<EventListItem>[] = [
     key: 'event',
     header: 'Event',
     render: (row) => (
-      <Stack direction="row" spacing={1} alignItems="center">
-        <span>{row.event}</span>
-        {row.isTest && <AppChip status="PUBLISHED" label="Test" size="small" />}
+      <Stack spacing={0.5}>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Typography fontWeight={800}>{row.event}</Typography>
+          {row.isTest && <AppChip status="TEST" label="Test" size="small" />}
+        </Stack>
+        <Typography
+          variant="caption"
+          sx={{
+            fontFamily: relayForgeTokens.font.mono,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {row.id}
+        </Typography>
       </Stack>
     ),
   },
   {
     key: 'createdAt',
     header: 'Created',
-    render: (row) => new Date(row.createdAt).toLocaleString(),
+    render: (row) => (
+      <Typography variant="body2" sx={{ fontFamily: relayForgeTokens.font.mono }}>
+        {new Date(row.createdAt).toLocaleString()}
+      </Typography>
+    ),
   },
   {
     key: 'status',
@@ -37,7 +54,14 @@ const columns: AppTableColumn<EventListItem>[] = [
   {
     key: 'deliveries',
     header: 'Deliveries',
-    render: (row) => `${row.deliverySucceeded}/${row.deliveryTotal}`,
+    render: (row) => (
+      <Typography fontWeight={800}>
+        {row.deliverySucceeded}
+        <Typography component="span" color="text.secondary">
+          /{row.deliveryTotal}
+        </Typography>
+      </Typography>
+    ),
   },
 ];
 

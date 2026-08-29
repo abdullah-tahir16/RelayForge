@@ -25,7 +25,12 @@ const AppAutocomplete = ({
       getOptionLabel={(option) => option.label}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder={placeholder} />
+        <TextField
+          {...params}
+          label={label}
+          placeholder={placeholder}
+          margin="dense"
+        />
       )}
       {...props}
     />

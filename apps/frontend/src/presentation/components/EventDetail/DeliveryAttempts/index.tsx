@@ -1,9 +1,10 @@
 import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DeliveryAttempt } from '../../../../core/types/Delivery';
+import AppCodeBlock from '../../App/AppCodeBlock';
 import AppLoader from '../../App/AppLoader';
+import AppSurface from '../../App/AppSurface';
 
 export interface DeliveryAttemptsProps {
   attempts: DeliveryAttempt[];
@@ -21,7 +22,7 @@ const DeliveryAttempts = ({ attempts, isLoading, isError }: DeliveryAttemptsProp
   return (
     <Stack spacing={1.5}>
       {attempts.map((attempt) => (
-        <Paper key={attempt.id} variant="outlined" sx={{ p: 2, minWidth: 0 }}>
+        <AppSurface key={attempt.id} tone="recessed" sx={{ p: 2 }}>
           <Stack spacing={1}>
             <Typography variant="subtitle2">
               Attempt {attempt.attemptNumber} ·{' '}
@@ -37,20 +38,11 @@ const DeliveryAttempts = ({ attempts, isLoading, isError }: DeliveryAttemptsProp
               <Alert severity="error">{attempt.errorMessage}</Alert>
             )}
             {attempt.responseBodyPreview !== null && (
-              <Typography
-                component="pre"
-                variant="body2"
-                sx={{ m: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-              >
+              <AppCodeBlock maxHeight={180} ariaLabel="Response body preview">
                 {attempt.responseBodyPreview || '(empty response body)'}
-              </Typography>
+              </AppCodeBlock>
             )}
-            <Typography
-              component="pre"
-              variant="caption"
-              color="text.secondary"
-              sx={{ m: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-            >
+            <AppCodeBlock maxHeight={220} ariaLabel="Attempt headers">
               {JSON.stringify(
                 {
                   requestHeaders: attempt.requestHeaders,
@@ -59,9 +51,9 @@ const DeliveryAttempts = ({ attempts, isLoading, isError }: DeliveryAttemptsProp
                 null,
                 2,
               )}
-            </Typography>
+            </AppCodeBlock>
           </Stack>
-        </Paper>
+        </AppSurface>
       ))}
     </Stack>
   );

@@ -14,6 +14,11 @@ const FormCheckbox = ({ name, label }: FormCheckboxProps) => {
         <FormControlLabel
           control={<Checkbox {...input} checked={Boolean(input.checked)} />}
           label={label}
+          sx={{
+            alignItems: 'center',
+            minHeight: 44,
+            '& .MuiFormControlLabel-label': { color: 'text.secondary' },
+          }}
         />
       )}
     </Field>

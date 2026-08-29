@@ -1,3 +1,4 @@
+import Stack from '@mui/material/Stack';
 import Header from './Header';
 import Table from './Table';
 import Form from './Form';
@@ -48,7 +49,7 @@ const Endpoints = ({
   onOneTimeSecretAcknowledge,
 }: EndpointsProps) => {
   return (
-    <div>
+    <Stack spacing={3}>
       <Header onCreateClick={onCreateClick} />
       <Table
         rows={rows}
@@ -81,7 +82,7 @@ const Endpoints = ({
         rotatedAt={oneTimeSecret?.rotatedAt ?? new Date(0).toISOString()}
         onAcknowledge={onOneTimeSecretAcknowledge}
       />
-    </div>
+    </Stack>
   );
 };
 

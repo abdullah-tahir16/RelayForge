@@ -2,6 +2,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AppButton from '../../App/AppButton';
 import AppConfirmDialog from '../../App/AppConfirmDialog';
+import AppKeyValueGrid from '../../App/AppKeyValueGrid';
 
 export interface SigningSecretProps {
   version: number;
@@ -24,10 +25,12 @@ const SigningSecret = ({
 }: SigningSecretProps) => {
   return (
     <Stack spacing={1.5} alignItems="flex-start">
-      <Typography variant="body2">Current version: {version}</Typography>
-      <Typography variant="body2">
-        Issued: {new Date(rotatedAt).toLocaleString()}
-      </Typography>
+      <AppKeyValueGrid
+        items={[
+          { label: 'Current version', value: version },
+          { label: 'Issued', value: new Date(rotatedAt).toLocaleString() },
+        ]}
+      />
       <Typography variant="body2" color="text.secondary" maxWidth={680}>
         Existing endpoints were provisioned securely during migration. Rotate
         once to obtain a secret you can configure in your receiver. Active
@@ -35,8 +38,9 @@ const SigningSecret = ({
       </Typography>
       <AppButton
         color="error"
+        variant="outlined"
         onClick={onRequestRotate}
-        disabled={isRotating}
+        loading={isRotating}
         sx={{ minHeight: 44 }}
       >
         Rotate signing secret

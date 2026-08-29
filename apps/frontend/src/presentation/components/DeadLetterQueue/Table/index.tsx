@@ -26,7 +26,7 @@ function columns(props: Pick<DeadLetterTableProps, 'onInspect' | 'onReplay' | 'o
         <Stack spacing={0.25}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="body2" fontWeight={600}>{row.eventType}</Typography>
-            {row.isTest && <AppChip status="PUBLISHED" label="Test" size="small" />}
+            {row.isTest && <AppChip status="TEST" label="Test" size="small" />}
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
             {row.eventId}
@@ -35,7 +35,11 @@ function columns(props: Pick<DeadLetterTableProps, 'onInspect' | 'onReplay' | 'o
       ),
     },
     { key: 'endpoint', header: 'Endpoint', render: (row) => row.endpointName },
-    { key: 'failure', header: 'Failure', render: (row) => row.failureReason },
+    {
+      key: 'failure',
+      header: 'Failure',
+      render: (row) => <AppChip status="DEAD_LETTERED" label={row.failureReason} />,
+    },
     { key: 'attempts', header: 'Attempts', render: (row) => row.attemptCount },
     {
       key: 'lastAttempt',

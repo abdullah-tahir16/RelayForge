@@ -38,6 +38,7 @@ Not yet proposed. Ordered by dependency — walking skeleton first (proves the e
 
 ## Done
 
+- [dashboard-ui-ux-redesign](openspec/changes/dashboard-ui-ux-redesign/proposal.md) — full dashboard visual-system and UX redesign across theme, shell, shared components, login, events, endpoints, endpoint detail, delivery history, and DLQ screens.
 - [endpoint-test-delivery](openspec/changes/endpoint-test-delivery/proposal.md) — endpoint detail test sends that create clearly marked synthetic Events and targeted Deliveries through the normal async signing/retry/attempt/DLQ pipeline.
 - [hmac-signing-and-secret-rotation](openspec/changes/hmac-signing-and-secret-rotation/proposal.md) — encrypted endpoint signing secrets, one-time rotation disclosure, versioned secret snapshots for delivery runs, HMAC-SHA256 webhook signatures, and verification guidance.
 - [dead-letter-queue-and-replay](openspec/changes/dead-letter-queue-and-replay/proposal.md) — durable dead-letter publication, explicit initial/manual Delivery Runs, workspace-scoped DLQ visibility, and auditable single-delivery/event replay under the same logical Delivery.

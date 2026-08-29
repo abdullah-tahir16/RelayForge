@@ -19,7 +19,8 @@ describe('SigningSecret', () => {
   it('shows safe metadata and requires confirmation before rotation', () => {
     const value = props();
     const { rerender } = render(<SigningSecret {...value} />);
-    expect(screen.getByText('Current version: 3')).toBeInTheDocument();
+    expect(screen.getByText('Current version')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText(/active delivery runs may continue/i)).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole('button', { name: 'Rotate signing secret' }),
@@ -40,6 +41,6 @@ describe('SigningSecret', () => {
       .map((element) => element.closest('button'))
       .find(Boolean);
     expect(backgroundButton).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Working…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Working...' })).toBeDisabled();
   });
 });

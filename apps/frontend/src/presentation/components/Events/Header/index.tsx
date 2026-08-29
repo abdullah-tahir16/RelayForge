@@ -1,10 +1,12 @@
-import Typography from '@mui/material/Typography';
+import AppPageHeader from '../../App/AppPageHeader';
 
 const Header = () => {
   return (
-    <Typography variant="h5" mb={2}>
-      Events
-    </Typography>
+    <AppPageHeader
+      eyebrow="Event stream"
+      title="Events"
+      description="Track incoming payloads, delivery status, endpoint test traffic, and routing outcomes in one operational timeline."
+    />
   );
 };
 

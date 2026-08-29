@@ -8,6 +8,8 @@ import {
 } from '../../../core/types/Delivery';
 import AppConfirmDialog from '../App/AppConfirmDialog';
 import AppLoader from '../App/AppLoader';
+import AppPageHeader from '../App/AppPageHeader';
+import AppSurface from '../App/AppSurface';
 import DeliveryRunInspector from '../DeliveryRunInspector';
 import DeadLetterTable from './Table';
 
@@ -38,12 +40,11 @@ export interface DeadLetterQueueProps {
 
 const DeadLetterQueue = (props: DeadLetterQueueProps) => (
   <Stack spacing={3}>
-    <div>
-      <Typography variant="h5">Dead Letter Queue</Typography>
-      <Typography variant="body2" color="text.secondary" mt={0.5}>
-        Inspect exhausted delivery runs, repair endpoints, and replay safely.
-      </Typography>
-    </div>
+    <AppPageHeader
+      eyebrow="Recovery"
+      title="Dead Letter Queue"
+      description="Inspect exhausted delivery runs, repair endpoints, replay safely, and keep failed webhook traffic visible."
+    />
 
     {props.isError ? (
       <Alert severity="error" role="alert">
@@ -66,7 +67,11 @@ const DeadLetterQueue = (props: DeadLetterQueueProps) => (
     )}
 
     {props.selectedDeliveryId && (
-      <section aria-labelledby="delivery-run-history-heading">
+      <AppSurface
+        component="section"
+        aria-labelledby="delivery-run-history-heading"
+        sx={{ p: { xs: 2, sm: 2.5 } }}
+      >
         <Typography id="delivery-run-history-heading" variant="h6" mb={1.5} sx={{ overflowWrap: 'anywhere' }}>
           Run history · {props.selectedDeliveryId}
         </Typography>
@@ -76,7 +81,7 @@ const DeadLetterQueue = (props: DeadLetterQueueProps) => (
           isLoading={props.inspectorLoading}
           isError={props.inspectorError}
         />
-      </section>
+      </AppSurface>
     )}
 
     <AppConfirmDialog

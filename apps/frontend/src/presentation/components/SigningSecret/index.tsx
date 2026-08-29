@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AppButton from '../App/AppButton';
+import AppCodeBlock from '../App/AppCodeBlock';
 import AppDialog from '../App/AppDialog';
 
 export interface OneTimeSecretDialogProps {
@@ -60,20 +60,9 @@ const OneTimeSecretDialog = ({
           Secret version {version} · issued{' '}
           {new Date(rotatedAt).toLocaleString()}
         </Typography>
-        <Box
-          component="code"
-          aria-label="Signing secret"
-          sx={{
-            display: 'block',
-            p: 2,
-            borderRadius: 1,
-            bgcolor: 'action.hover',
-            overflowWrap: 'anywhere',
-            fontSize: '0.875rem',
-          }}
-        >
+        <AppCodeBlock maxHeight={180} ariaLabel="Signing secret">
           {secret}
-        </Box>
+        </AppCodeBlock>
         <AppButton
           onClick={copySecret}
           startIcon={<ContentCopyIcon />}

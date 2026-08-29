@@ -1,7 +1,8 @@
 import { useProjectUseCase } from '../../../infrastructure/useCases/Project/useProjectUseCase';
 
 export function useProjectSwitcherFeature() {
-  const { projects, selectedProjectId, selectProject } = useProjectUseCase();
+  const { projects, isLoading, selectedProjectId, selectProject } =
+    useProjectUseCase();
 
   const options = projects.map((project) => ({
     value: project.id,
@@ -10,6 +11,7 @@ export function useProjectSwitcherFeature() {
 
   return {
     options,
+    isLoading,
     value: selectedProjectId ?? '',
     onChange: selectProject,
   };

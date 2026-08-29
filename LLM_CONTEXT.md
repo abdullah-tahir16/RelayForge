@@ -52,7 +52,9 @@ src/
 └── presentation/   # containers/ (render-only), hooks/ (feature state), components/
 ```
 
-Material UI is used only through shared `App*` wrappers (`AppButton`, `AppTextField`, `AppDialog`, ...) — don't reach for raw MUI components inside features. Forms use React Final Form + Zod through `Form*` wrappers, not raw `<Field>`/`<TextField>` combinations.
+Material UI is used through shared `App*` wrappers for controls and surfaces (`AppButton`, `AppTextField`, `AppDialog`, `AppTable`, `AppChip`, `AppSurface`, `AppPageHeader`, ...) so feature screens do not recreate visual behavior locally. Forms use React Final Form + Zod through `Form*` wrappers, not raw `<Field>`/`<TextField>` combinations.
+
+The dashboard visual direction is a low-glare light infrastructure console, not dark mode and not pure-white SaaS default. Use warm neutral paper surfaces, crisp borders, controlled radius, subtle shadows, strong ink text, Plus Jakarta Sans for UI, JetBrains Mono only for IDs/payloads/timestamps/code-like values, clear status chips, visible focus rings, restrained motion, and responsive layouts that avoid page-level horizontal overflow.
 
 ## Cross-cutting security constraints
 

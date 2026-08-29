@@ -26,15 +26,28 @@ const AppConfirmDialog = ({
   loading = false,
 }: AppConfirmDialogProps) => {
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onCancel}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 4 } }}
+    >
+      <DialogTitle sx={{ fontWeight: 800 }}>{title}</DialogTitle>
       <DialogContent>
         <DialogContentText>{description}</DialogContentText>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel} disabled={loading}>Cancel</Button>
-        <AppButton color="error" onClick={onConfirm} disabled={loading}>
-          {loading ? 'Working…' : confirmLabel}
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
+        <Button variant="outlined" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <AppButton
+          color="error"
+          onClick={onConfirm}
+          loading={loading}
+          aria-busy={loading}
+        >
+          {loading ? 'Working...' : confirmLabel}
         </AppButton>
       </DialogActions>
     </Dialog>

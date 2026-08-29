@@ -1,14 +1,17 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import {
   DeliveryAttempt,
   DeliveryRun,
 } from '../../../core/types/Delivery';
 import AppChip from '../App/AppChip';
 import AppLoader from '../App/AppLoader';
+import AppSurface from '../App/AppSurface';
+import AppCodeBlock from '../App/AppCodeBlock';
+import { relayForgeTokens } from '../../../theme/theme';
 
 export interface DeliveryRunInspectorProps {
   runs: DeliveryRun[];
@@ -40,14 +43,14 @@ const DeliveryRunInspector = ({
       {runs.map((run) => {
         const runAttempts = attempts.filter((attempt) => attempt.runId === run.id);
         return (
-          <Paper key={run.id} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
+          <AppSurface key={run.id} tone="recessed" sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Stack spacing={1.5}>
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 alignItems={{ xs: 'flex-start', sm: 'center' }}
                 spacing={1}
               >
-                <Typography variant="subtitle2">
+                <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                   Run {run.runNumber} · {run.trigger === 'INITIAL' ? 'Initial' : 'Manual replay'}
                 </Typography>
                 <AppChip status={run.status} label={run.status} />
@@ -78,7 +81,14 @@ const DeliveryRunInspector = ({
                   {runAttempts.map((attempt) => (
                     <Box
                       key={attempt.id}
-                      sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, minWidth: 0 }}
+                      sx={{
+                        p: 1.5,
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 3,
+                        minWidth: 0,
+                        bgcolor: alpha(relayForgeTokens.color.surfaceRaised, 0.72),
+                      }}
                     >
                       <Typography variant="body2" fontWeight={600}>
                         Run attempt {attempt.runAttemptNumber} · Global attempt {attempt.attemptNumber}
@@ -97,20 +107,18 @@ const DeliveryRunInspector = ({
                         </Alert>
                       )}
                       {attempt.responseBodyPreview !== null && (
-                        <Typography
-                          component="pre"
-                          variant="body2"
-                          sx={{ mt: 1, mb: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-                        >
+                        <Box mt={1}>
+                          <AppCodeBlock maxHeight={160} ariaLabel="Attempt response preview">
                           {attempt.responseBodyPreview || '(empty response body)'}
-                        </Typography>
+                          </AppCodeBlock>
+                        </Box>
                       )}
                     </Box>
                   ))}
                 </Stack>
               )}
             </Stack>
-          </Paper>
+          </AppSurface>
         );
       })}
     </Stack>

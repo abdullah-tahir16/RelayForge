@@ -1,3 +1,4 @@
+import Stack from '@mui/material/Stack';
 import Header from './Header';
 import Filters from './Filters';
 import Table from './Table';
@@ -30,7 +31,7 @@ const Events = ({
   onRowClick,
 }: EventsProps) => {
   return (
-    <div>
+    <Stack spacing={3}>
       <Header />
       <Filters
         filters={filters}
@@ -46,7 +47,7 @@ const Events = ({
         onPageSizeChange={onPageSizeChange}
         onRowClick={onRowClick}
       />
-    </div>
+    </Stack>
   );
 };
 

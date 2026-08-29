@@ -16,7 +16,13 @@ const AppSnackbar = ({ open, message, severity, onClose }: AppSnackbarProps) => 
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
     >
-      <Alert onClose={onClose} severity={severity} variant="filled">
+      <Alert
+        onClose={onClose}
+        severity={severity}
+        variant="filled"
+        role="status"
+        sx={{ borderRadius: 3, boxShadow: 8 }}
+      >
         {message}
       </Alert>
     </Snackbar>
