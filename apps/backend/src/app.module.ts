@@ -10,6 +10,7 @@ import { EndpointsModule } from './endpoints/endpoints.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { EventsModule } from './events/events.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
+import { DashboardSummaryModule } from './dashboard-summary/dashboard-summary.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { HealthModule } from './health/health.module';
     SubscriptionsModule,
     EventsModule,
     DeliveriesModule,
+    DashboardSummaryModule,
     HealthModule,
   ],
 })

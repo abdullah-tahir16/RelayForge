@@ -33,7 +33,7 @@ const AppChip = ({ status, label, sx, ...props }: AppChipProps) => {
         bgcolor: tone.bg,
         color: tone.fg,
         height: 24,
-        borderRadius: 1.5,
+        borderRadius: '999px',
         fontWeight: 800,
         letterSpacing: '0.035em',
         textTransform: 'uppercase',

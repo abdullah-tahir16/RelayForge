@@ -32,7 +32,7 @@ const AppDialog = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: '8px',
         },
       }}
     >

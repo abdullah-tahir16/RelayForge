@@ -4,6 +4,7 @@ import Filters from './Filters';
 import Table from './Table';
 import { EventFilters, EventListItem } from '../../../core/types/Event';
 import { EndpointLookupItem } from '../../../core/types/Endpoint';
+import AppMetricStrip from '../App/AppMetricStrip';
 
 export interface EventsProps {
   rows: EventListItem[];
@@ -30,9 +31,45 @@ const Events = ({
   onFiltersChange,
   onRowClick,
 }: EventsProps) => {
+  const activeCount = rows.filter((row) =>
+    ['ACCEPTED', 'PUBLISHED', 'PROCESSING'].includes(row.status),
+  ).length;
+  const failedCount = rows.filter((row) =>
+    ['PARTIALLY_FAILED', 'FAILED', 'DEAD_LETTERED'].includes(row.status),
+  ).length;
+  const testCount = rows.filter((row) => row.isTest).length;
+
   return (
     <Stack spacing={3}>
       <Header />
+      <AppMetricStrip
+        metrics={[
+          {
+            label: 'Matching events',
+            value: total.toLocaleString(),
+            helper: `${rows.length} visible on this page`,
+            tone: 'neutral',
+          },
+          {
+            label: 'In flight',
+            value: activeCount,
+            helper: 'Accepted, published, or processing',
+            tone: 'info',
+          },
+          {
+            label: 'Needs attention',
+            value: failedCount,
+            helper: 'Failed, partial, or dead-lettered',
+            tone: failedCount > 0 ? 'danger' : 'accent',
+          },
+          {
+            label: 'Test traffic',
+            value: testCount,
+            helper: 'Synthetic endpoint checks',
+            tone: 'accent',
+          },
+        ]}
+      />
       <Filters
         filters={filters}
         endpointOptions={endpointOptions}

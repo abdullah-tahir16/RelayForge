@@ -8,7 +8,7 @@ const AppSkeleton = (props: AppSkeletonProps) => {
       animation="wave"
       variant="rounded"
       {...props}
-      sx={{ borderRadius: 3, ...props.sx }}
+      sx={{ borderRadius: '18px', ...props.sx }}
     />
   );
 };

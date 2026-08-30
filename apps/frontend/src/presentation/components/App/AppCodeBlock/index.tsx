@@ -23,7 +23,7 @@ const AppCodeBlock = ({
         p: { xs: 2, sm: 2.5 },
         border: 1,
         borderColor: alpha(relayForgeTokens.color.info, 0.24),
-        borderRadius: 3,
+        borderRadius: '18px',
         bgcolor: alpha(relayForgeTokens.color.surfaceRecessed, 0.92),
         color: relayForgeTokens.color.text,
         overflow: 'auto',

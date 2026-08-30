@@ -31,10 +31,10 @@ Alternative considered: a dark OLED console. Rejected by product preference; the
 The theme should define semantic palette roles for app background, elevated surfaces, recessed panels, borders, primary text, secondary text, muted text, accent, focus, and status states. Components should consume theme roles instead of hardcoded one-off colors.
 
 Initial direction:
-- Background: warm neutral paper, not pure white and not green haze.
-- Surfaces: warm off-white panels with crisp borders, controlled radius, subtle shadows, and restrained focus glow.
+- Background: soft neutral gray app canvas, not pure white and not green haze.
+- Surfaces: white floating modules with crisp borders, controlled radius, subtle shadows, and restrained focus glow.
 - Accent: delivery/run green for primary action and success, with amber/red/cyan variants for retry, failure, dead-letter, test, and informational states.
-- Typography: use a clean non-default pairing: Plus Jakarta Sans for UI text and JetBrains Mono for IDs, payloads, event names, and timestamps. Avoid default system/Roboto/Inter-only styling.
+- Typography: use a clean non-default pairing: Manrope for UI text and JetBrains Mono for IDs, payloads, event names, and timestamps. Avoid default system/Roboto/Inter-only styling.
 
 Alternative considered: page-level `sx` styling. Rejected because it creates drift and makes future screens harder to align.
 
@@ -71,6 +71,14 @@ This order prevents each page from inventing its own local visual language.
 
 **8. Tests should validate behavior and key accessible labels, not snapshots.**
 Existing frontend tests should be updated to match changed labels/hierarchy where needed, but avoid fragile visual snapshots. Add focused tests for important interactions: navigation remains reachable, primary actions still fire, disabled/loading states work, tables preserve row clicks/actions, and test/status markers remain visible.
+
+**9. Correct the visual direction toward a premium modern light dashboard.**
+The first implementation pass still felt like styled MUI instead of designed product UI. Correct the direction using the user's references: a soft gray app canvas, white floating modules, compact icon navigation rail on desktop, full labeled drawer on mobile, strong black typography, visible page actions, high-quality spacing, and restrained green status/accent usage. Avoid oversized beige/green surfaces, huge empty pages, hidden buttons, and blunt typography.
+
+**10. Simplify: flat surfaces, no gradients/glow, smaller radius, system font, one natural page scroll.**
+Round 2 (decision 9) over-corrected toward "premium SaaS" decoration — gradients, glow shadows, a floating rounded/shadowed content card, a branded display font, and a viewport-clipped shell with its own internal scroll region. Direct user feedback after seeing it running rejected all of it: "unnecessary scrolls, the sidebar looks shit, the font and feel looks shit, the box with rounded border which says operations console looks shit, i want simple page." Correct toward: flat solid colors (no gradients on buttons, dialogs, body background, or the brand mark), no `boxShadow` glow/elevation on cards, a small consistent border-radius (8px, down from 24-32px), the system font stack instead of a loaded display face (Manrope), and a shell that scrolls as one natural document (sidebar/header pinned via `position:sticky`) instead of clipping itself into a fixed-height card with a separately-scrolling interior. The icon-only desktop nav rail from decision 9 was reverted to icon+label at every breakpoint as part of the same feedback (tracked in `dashboard-overview-page`, the change that built it).
+
+Alternative considered: iterate again on the "premium" direction with lighter-touch decoration. Rejected — the feedback was specific and repeated ("looks shit" three times across distinct elements), which reads as rejection of the decorative direction itself, not a request to retune it.
 
 ## Risks / Trade-offs
 

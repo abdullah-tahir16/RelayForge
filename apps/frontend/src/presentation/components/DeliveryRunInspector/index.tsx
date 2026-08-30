@@ -85,7 +85,7 @@ const DeliveryRunInspector = ({
                         p: 1.5,
                         border: 1,
                         borderColor: 'divider',
-                        borderRadius: 3,
+                        borderRadius: '18px',
                         minWidth: 0,
                         bgcolor: alpha(relayForgeTokens.color.surfaceRaised, 0.72),
                       }}

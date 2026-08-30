@@ -54,7 +54,7 @@ src/
 
 Material UI is used through shared `App*` wrappers for controls and surfaces (`AppButton`, `AppTextField`, `AppDialog`, `AppTable`, `AppChip`, `AppSurface`, `AppPageHeader`, ...) so feature screens do not recreate visual behavior locally. Forms use React Final Form + Zod through `Form*` wrappers, not raw `<Field>`/`<TextField>` combinations.
 
-The dashboard visual direction is a low-glare light infrastructure console, not dark mode and not pure-white SaaS default. Use warm neutral paper surfaces, crisp borders, controlled radius, subtle shadows, strong ink text, Plus Jakarta Sans for UI, JetBrains Mono only for IDs/payloads/timestamps/code-like values, clear status chips, visible focus rings, restrained motion, and responsive layouts that avoid page-level horizontal overflow.
+The dashboard visual direction is a premium low-glare light infrastructure console, not dark mode and not pure-white SaaS default. Use a soft neutral gray app canvas, white floating modules, compact icon rail navigation on desktop, labeled drawer navigation on mobile, strong ink text, Manrope for UI, JetBrains Mono only for IDs/payloads/timestamps/code-like values, clear status chips, visible focus rings, restrained motion, and responsive layouts that avoid hidden actions or page-level horizontal overflow.
 
 ## Cross-cutting security constraints
 

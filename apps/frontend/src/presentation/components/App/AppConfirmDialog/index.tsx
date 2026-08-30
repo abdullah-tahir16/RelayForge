@@ -31,7 +31,7 @@ const AppConfirmDialog = ({
       onClose={loading ? undefined : onCancel}
       maxWidth="xs"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 4 } }}
+      PaperProps={{ sx: { borderRadius: '8px' } }}
     >
       <DialogTitle sx={{ fontWeight: 800 }}>{title}</DialogTitle>
       <DialogContent>

@@ -9,6 +9,7 @@ import ToastProvider from './presentation/toast/ToastProvider';
 import AuthGuard from './presentation/routes/AuthGuard';
 import DashboardLayout from './presentation/components/DashboardLayout';
 import LoginContainer from './presentation/containers/Login';
+import OverviewContainer from './presentation/containers/Overview';
 import EventsContainer from './presentation/containers/Events';
 import EventDetailContainer from './presentation/containers/EventDetail';
 import EndpointsContainer from './presentation/containers/Endpoints';
@@ -28,7 +29,17 @@ const App = () => {
               <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<LoginContainer />} />
-                  <Route path="/" element={<Navigate to="/events" replace />} />
+                  <Route path="/" element={<Navigate to="/overview" replace />} />
+                  <Route
+                    path="/overview"
+                    element={
+                      <AuthGuard>
+                        <DashboardLayout>
+                          <OverviewContainer />
+                        </DashboardLayout>
+                      </AuthGuard>
+                    }
+                  />
                   <Route
                     path="/events"
                     element={

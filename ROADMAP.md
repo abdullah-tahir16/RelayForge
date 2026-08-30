@@ -38,6 +38,7 @@ Not yet proposed. Ordered by dependency — walking skeleton first (proves the e
 
 ## Done
 
+- [dashboard-overview-page](openspec/changes/dashboard-overview-page/proposal.md) — project-scoped Overview landing page (in-flight/needs-attention/DLQ-backlog/endpoint counts, recent activity) backed by a new `GET /api/v1/projects/:projectId/summary` endpoint; also finally implements the icon-only desktop navigation rail / labeled mobile drawer that the redesign below had described but not built.
 - [dashboard-ui-ux-redesign](openspec/changes/dashboard-ui-ux-redesign/proposal.md) — full dashboard visual-system and UX redesign across theme, shell, shared components, login, events, endpoints, endpoint detail, delivery history, and DLQ screens.
 - [endpoint-test-delivery](openspec/changes/endpoint-test-delivery/proposal.md) — endpoint detail test sends that create clearly marked synthetic Events and targeted Deliveries through the normal async signing/retry/attempt/DLQ pipeline.
 - [hmac-signing-and-secret-rotation](openspec/changes/hmac-signing-and-secret-rotation/proposal.md) — encrypted endpoint signing secrets, one-time rotation disclosure, versioned secret snapshots for delivery runs, HMAC-SHA256 webhook signatures, and verification guidance.

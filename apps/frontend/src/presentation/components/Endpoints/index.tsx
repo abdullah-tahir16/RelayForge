@@ -6,6 +6,7 @@ import { EndpointFormSchemaValues } from './Form/data';
 import AppConfirmDialog from '../App/AppConfirmDialog';
 import { Endpoint, SigningSecretRotated } from '../../../core/types/Endpoint';
 import OneTimeSecretDialog from '../SigningSecret';
+import AppMetricStrip from '../App/AppMetricStrip';
 
 export interface EndpointsProps {
   rows: Endpoint[];
@@ -48,9 +49,46 @@ const Endpoints = ({
   oneTimeSecret,
   onOneTimeSecretAcknowledge,
 }: EndpointsProps) => {
+  const enabledCount = rows.filter((row) => row.enabled).length;
+  const disabledCount = rows.length - enabledCount;
+  const averageTimeout =
+    rows.length > 0
+      ? Math.round(
+          rows.reduce((total, row) => total + row.timeoutMs, 0) / rows.length,
+        )
+      : 0;
+
   return (
     <Stack spacing={3}>
       <Header onCreateClick={onCreateClick} />
+      <AppMetricStrip
+        metrics={[
+          {
+            label: 'Endpoints',
+            value: rows.length,
+            helper: 'Configured receivers',
+            tone: 'neutral',
+          },
+          {
+            label: 'Enabled',
+            value: enabledCount,
+            helper: 'Accepting delivery traffic',
+            tone: 'accent',
+          },
+          {
+            label: 'Disabled',
+            value: disabledCount,
+            helper: 'Not receiving new deliveries',
+            tone: disabledCount > 0 ? 'warning' : 'neutral',
+          },
+          {
+            label: 'Avg timeout',
+            value: `${averageTimeout}ms`,
+            helper: 'Across visible endpoints',
+            tone: 'info',
+          },
+        ]}
+      />
       <Table
         rows={rows}
         onRowClick={onRowClick}

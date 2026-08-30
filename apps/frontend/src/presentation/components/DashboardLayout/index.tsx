@@ -16,13 +16,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import BoltIcon from '@mui/icons-material/Bolt';
 import HubIcon from '@mui/icons-material/Hub';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import ProjectSwitcherContainer from '../../containers/ProjectSwitcher';
 import { NAV_ITEMS } from './consts';
 import { relayForgeTokens } from '../../../theme/theme';
 
-const DRAWER_WIDTH = 248;
+const SIDEBAR_WIDTH = 232;
 
 export interface DashboardLayoutProps {
   children: ReactNode;
@@ -37,10 +38,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   useEffect(() => {
     setMobileOpen(false);
-    mainRef.current?.focus();
+    mainRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
 
   const iconByPath: Record<string, ReactNode> = {
+    '/overview': <DashboardIcon fontSize="small" />,
     '/events': <BoltIcon fontSize="small" />,
     '/dlq': <ReportProblemIcon fontSize="small" />,
     '/endpoints': <AltRouteIcon fontSize="small" />,
@@ -51,36 +53,30 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       display="flex"
       flexDirection="column"
       height="100%"
-      p={2.5}
+      p={2}
       sx={{
-        background:
-          `linear-gradient(180deg, ${relayForgeTokens.color.surface} 0%, ${relayForgeTokens.color.backgroundRaised} 100%)`,
+        position: isDesktop ? 'sticky' : undefined,
+        top: isDesktop ? 0 : undefined,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1.25} mb={4}>
+      <Stack direction="row" alignItems="center" spacing={1.25} mb={3}>
         <Box
           aria-hidden
           sx={{
-            width: 42,
-            height: 42,
-            borderRadius: '50%',
+            width: 32,
+            height: 32,
+            borderRadius: '8px',
             display: 'grid',
             placeItems: 'center',
-            color: 'primary.contrastText',
-            bgcolor: 'primary.main',
-            boxShadow: `0 14px 26px ${alpha(relayForgeTokens.color.accent, 0.18)}`,
+            bgcolor: relayForgeTokens.color.accent,
+            color: '#f8faf4',
           }}
         >
           <HubIcon fontSize="small" />
         </Box>
-        <Box minWidth={0}>
-          <Typography variant="subtitle1" lineHeight={1} fontWeight={800}>
-            RelayForge
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Webhook control plane
-          </Typography>
-        </Box>
+        <Typography variant="subtitle1" fontWeight={700}>
+          RelayForge
+        </Typography>
         {!isDesktop && (
           <IconButton
             aria-label="Close navigation"
@@ -91,7 +87,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </IconButton>
         )}
       </Stack>
-      <List component="nav" aria-label="Primary dashboard navigation" sx={{ p: 0 }}>
+
+      <List
+        component="nav"
+        aria-label="Primary dashboard navigation"
+        sx={{ display: 'grid', gap: 0.5, p: 0 }}
+      >
         {NAV_ITEMS.map((item) => {
           const selected = location.pathname.startsWith(item.path);
           return (
@@ -101,65 +102,42 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               to={item.path}
               selected={selected}
               sx={{
-                mb: 0.75,
-                minHeight: 48,
-                borderRadius: 3,
-                color: selected ? 'text.primary' : 'text.secondary',
-                boxShadow: selected
-                  ? '0 10px 24px rgba(55, 46, 32, 0.08)'
-                  : 'none',
+                minHeight: 40,
+                px: 1.5,
+                borderRadius: '6px',
+                color: selected ? relayForgeTokens.color.text : 'text.secondary',
                 '&.Mui-selected': {
-                  bgcolor: relayForgeTokens.color.surface,
+                  bgcolor: relayForgeTokens.color.accentSoft,
                 },
-                '&.Mui-selected:hover, &:hover': {
-                  bgcolor: selected
-                    ? relayForgeTokens.color.surface
-                    : alpha(relayForgeTokens.color.text, 0.045),
+                '&.Mui-selected:hover': {
+                  bgcolor: relayForgeTokens.color.accentSoft,
                 },
-                '&::before': selected
-                  ? {
-                      content: '""',
-                      width: 4,
-                      height: 24,
-                      borderRadius: 999,
-                      bgcolor: relayForgeTokens.color.accent,
-                      position: 'absolute',
-                      left: 0,
-	                    }
-	                  : undefined,
+                '&:hover': {
+                  bgcolor: alpha(relayForgeTokens.color.text, 0.04),
+                },
               }}
             >
-              <ListItemIcon
-                sx={{
-                  minWidth: 36,
-                  color: selected ? 'primary.main' : 'text.secondary',
-                }}
-              >
+              <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
                 {iconByPath[item.path]}
               </ListItemIcon>
               <ListItemText
                 primary={item.label}
-                primaryTypographyProps={{ fontWeight: selected ? 800 : 700 }}
+                primaryTypographyProps={{ fontWeight: selected ? 700 : 500 }}
               />
             </ListItemButton>
           );
         })}
       </List>
-      <Box
-        mt="auto"
-        pt={3}
-        sx={{ borderTop: 1, borderColor: alpha(relayForgeTokens.color.border, 0.9) }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          Delivery lifecycle visibility, endpoint testing, replay, and DLQ
-          operations in one project-scoped console.
-        </Typography>
-      </Box>
     </Box>
   );
 
   return (
-    <Box display="flex" minHeight="100dvh">
+    <Box
+      display="flex"
+      alignItems="flex-start"
+      minHeight="100vh"
+      bgcolor="background.default"
+    >
       <Box
         component="a"
         href="#main-content"
@@ -172,22 +150,25 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           color: 'primary.contrastText',
           px: 2,
           py: 1,
-          borderRadius: 2,
+          borderRadius: '6px',
           '&:focus': { top: 16 },
         }}
       >
         Skip to main content
       </Box>
+
       <Drawer
         variant={isDesktop ? 'permanent' : 'temporary'}
         open={isDesktop || mobileOpen}
         onClose={() => setMobileOpen(false)}
         ModalProps={{ keepMounted: true }}
         sx={{
-          width: DRAWER_WIDTH,
+          width: { md: SIDEBAR_WIDTH },
           flexShrink: 0,
+          alignSelf: isDesktop ? 'stretch' : undefined,
           [`& .MuiDrawer-paper`]: {
-            width: DRAWER_WIDTH,
+            width: SIDEBAR_WIDTH,
+            height: '100%',
             boxSizing: 'border-box',
             borderRight: 1,
             borderColor: 'divider',
@@ -197,15 +178,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         {drawerContent}
       </Drawer>
+
       <Box
         component="section"
         flexGrow={1}
         minWidth={0}
         display="flex"
         flexDirection="column"
-        sx={{
-          bgcolor: 'transparent',
-        }}
       >
         <Box
           component="header"
@@ -213,15 +192,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             position: 'sticky',
             top: 0,
             zIndex: (muiTheme) => muiTheme.zIndex.appBar,
-            px: { xs: 2, sm: 3, lg: 4 },
-            py: { xs: 1.5, md: 2 },
+            px: { xs: 2, sm: 3 },
+            py: 1.25,
             borderBottom: 1,
-            borderColor: alpha(relayForgeTokens.color.borderStrong, 0.35),
-            bgcolor: alpha(relayForgeTokens.color.backgroundRaised, 0.9),
-            backdropFilter: 'blur(14px)',
+            borderColor: 'divider',
+            bgcolor: 'background.default',
           }}
         >
-          <Toolbar disableGutters sx={{ minHeight: 48, gap: 2 }}>
+          <Toolbar disableGutters sx={{ minHeight: 40, gap: 2 }}>
             {!isDesktop && (
               <IconButton
                 aria-label="Open navigation"
@@ -230,21 +208,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <MenuIcon />
               </IconButton>
             )}
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={800}
-              textTransform="uppercase"
-              letterSpacing="0.12em"
-              sx={{ display: { xs: 'none', sm: 'block' }, mr: 'auto' }}
-            >
-              Operations console
-            </Typography>
             <Box sx={{ ml: 'auto', width: { xs: '100%', sm: 'auto' } }}>
               <ProjectSwitcherContainer />
             </Box>
           </Toolbar>
         </Box>
+
         <Box
           id="main-content"
           component="main"
@@ -252,10 +221,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           tabIndex={-1}
           flexGrow={1}
           minWidth={0}
-          p={{ xs: 2, sm: 3, lg: 4 }}
+          p={{ xs: 2, sm: 3 }}
           sx={{
             '&:focus': { outline: 'none' },
-            maxWidth: 1440,
+            maxWidth: 1200,
             mx: 'auto',
             width: '100%',
           }}

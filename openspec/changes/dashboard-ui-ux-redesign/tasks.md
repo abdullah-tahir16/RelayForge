@@ -69,3 +69,23 @@
 - [x] 9.3 Run `pnpm --dir apps/frontend build` and `pnpm --dir apps/frontend test`.
 - [x] 9.4 Update `LLM_CONTEXT.md` with the dashboard visual-system direction and frontend design conventions.
 - [x] 9.5 Move the roadmap entry through Proposed/Doing/Done according to OpenSpec progress while keeping `idempotency-keys` as the next backend correctness change.
+
+## 10. Visual Quality Correction
+
+- [x] 10.1 Replace the heavy text sidebar with a modern compact navigation rail that keeps routes accessible while giving the main dashboard more premium composition.
+- [x] 10.2 Replace the current UI font direction with a cleaner premium SaaS font and keep monospace usage limited to technical identifiers, timestamps, URLs, and payloads.
+- [x] 10.3 Rework the dashboard shell so top context controls cannot overlap or hide page-level primary actions at any viewport width.
+- [x] 10.4 Rebalance the app canvas, page headers, surfaces, cards, filters, and tables toward the provided reference style: soft neutral canvas, white floating modules, strong black type, restrained accent color, and controlled rounded corners.
+- [x] 10.5 Add compact overview/stat modules where useful so list pages do not feel like empty canvas with one table.
+- [x] 10.6 Verify build, tests, OpenSpec validation, and local frontend serve after the corrective visual pass.
+
+## 11. Simplification Correction (round 3, direct user feedback)
+
+Round 2 (section 10) still wasn't right: after running the app and looking at real screenshots, the user rejected the icon-only rail, the floating rounded/shadowed shell, the Manrope typeface, and the gradient/glow decoration outright, asking for "simple page." (The nav-shape side of this lives in `dashboard-overview-page/tasks.md` section 8, since that change is what actually built the icon-only rail; this section covers the shared theme.)
+
+- [x] 11.1 Flattened the theme: removed the two-layer body background gradient, the primary-button gradient, the dialog background gradient, and the sidebar logo's gradient+glow badge in favor of flat solid colors.
+- [x] 11.2 Reduced border-radius across shared tokens/components: `shape.borderRadius` 10→8, buttons/inputs 10-12→8, `AppSurface`/`AppDialog`/`AppConfirmDialog`/`AppMetricStrip` 24px→8px.
+- [x] 11.3 Removed the `boxShadow` "glow"/elevation treatment from `AppSurface`, `AppMetricStrip`, and the dashboard shell's floating content card.
+- [x] 11.4 Replaced Manrope with the system font stack for UI text (`theme/fonts.css` no longer imports it); kept JetBrains Mono for technical/monospace text.
+- [x] 11.5 Removed the shell's `overflow:hidden` + fixed-viewport-height clipping (was reported as "unnecessary scrolls"); the page now scrolls as one natural document, with the sidebar/header pinned via `position:sticky` instead of a separately-scrolling inner region.
+- [x] 11.6 Ran `pnpm --dir apps/frontend build` and `pnpm --dir apps/frontend test` (51/51) after the pass, and re-verified visually via live screenshots of the running app rather than relying on component tests alone.

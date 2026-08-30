@@ -2,31 +2,30 @@ import { alpha, createTheme } from '@mui/material/styles';
 
 export const relayForgeTokens = {
   color: {
-    background: '#ece8dc',
-    backgroundRaised: '#f5f2e8',
-    surface: '#fffdf7',
-    surfaceRaised: '#fffaf0',
-    surfaceRecessed: '#e6e1d4',
-    border: '#d6cebd',
-    borderStrong: '#a99d88',
-    text: '#172018',
-    textMuted: '#526052',
-    textSubtle: '#747d70',
-    accent: '#16633f',
-    accentSoft: '#dceade',
-    info: '#146b83',
+    background: '#ededeb',
+    backgroundRaised: '#f7f7f4',
+    surface: '#ffffff',
+    surfaceRaised: '#fbfaf7',
+    surfaceRecessed: '#f1f0ec',
+    border: '#e0ddd5',
+    borderStrong: '#b7b1a4',
+    text: '#111411',
+    textMuted: '#505850',
+    textSubtle: '#7a8077',
+    accent: '#157347',
+    accentSoft: '#e2f1e7',
+    info: '#286b87',
     test: '#1d6694',
-    warning: '#8c6200',
-    danger: '#a83242',
-    success: '#16633f',
+    warning: '#916400',
+    danger: '#a53242',
+    success: '#157347',
   },
   font: {
-    ui: '"Plus Jakarta Sans", "Aptos", "Segoe UI", sans-serif',
+    ui: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     mono: '"JetBrains Mono", "SFMono-Regular", Consolas, monospace',
   },
   shadow: {
-    surface: '0 14px 34px rgba(55, 46, 32, 0.08)',
-    glow: '0 0 0 1px rgba(22, 99, 63, 0.18), 0 10px 24px rgba(22, 99, 63, 0.1)',
+    surface: '0 1px 2px rgba(17, 20, 17, 0.05)',
   },
 };
 
@@ -70,14 +69,14 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 10,
+    borderRadius: 8,
   },
   typography: {
     fontFamily: relayForgeTokens.font.ui,
     h4: {
-      fontSize: '1.9rem',
-      lineHeight: 1.16,
-      fontWeight: 700,
+      fontSize: '2rem',
+      lineHeight: 1.08,
+      fontWeight: 800,
       letterSpacing: '-0.035em',
     },
     h5: {
@@ -122,10 +121,7 @@ export const theme = createTheme({
         },
         body: {
           margin: 0,
-          background:
-            `radial-gradient(circle at 18% -20%, ${alpha(relayForgeTokens.color.accent, 0.08)} 0, transparent 28rem), ` +
-            `linear-gradient(135deg, ${relayForgeTokens.color.background} 0%, #f3efe4 58%, #e3ded0 100%)`,
-          backgroundAttachment: 'fixed',
+          background: relayForgeTokens.color.background,
           color: relayForgeTokens.color.text,
           fontFeatureSettings: '"ss01", "cv02", "tnum"',
           textRendering: 'optimizeLegibility',
@@ -164,8 +160,8 @@ export const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          minHeight: 44,
-          borderRadius: 10,
+          minHeight: 40,
+          borderRadius: 8,
           paddingInline: 18,
           transition:
             'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease',
@@ -178,20 +174,16 @@ export const theme = createTheme({
           },
         },
         containedPrimary: {
-          background:
-            `linear-gradient(135deg, ${relayForgeTokens.color.text} 0%, #263229 100%)`,
+          backgroundColor: relayForgeTokens.color.accent,
           color: '#f8faf4',
-          boxShadow: `0 10px 22px ${alpha(relayForgeTokens.color.text, 0.18)}`,
           '&:hover': {
-            background:
-              `linear-gradient(135deg, #0f1711 0%, ${relayForgeTokens.color.text} 100%)`,
-            boxShadow: `0 14px 28px ${alpha(relayForgeTokens.color.text, 0.22)}`,
+            backgroundColor: '#0f5837',
           },
         },
         outlined: {
-          borderColor: alpha(relayForgeTokens.color.borderStrong, 0.88),
+          borderColor: alpha(relayForgeTokens.color.borderStrong, 0.72),
           color: relayForgeTokens.color.text,
-          backgroundColor: alpha(relayForgeTokens.color.surfaceRaised, 0.62),
+          backgroundColor: relayForgeTokens.color.surface,
           '&:hover': {
             borderColor: relayForgeTokens.color.accent,
             backgroundColor: alpha(relayForgeTokens.color.accent, 0.08),
@@ -209,9 +201,9 @@ export const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          minWidth: 44,
-          minHeight: 44,
-          borderRadius: 10,
+          minWidth: 40,
+          minHeight: 40,
+          borderRadius: 8,
           color: relayForgeTokens.color.textMuted,
           transition:
             'background-color 180ms ease, color 180ms ease, border-color 180ms ease',
@@ -234,7 +226,7 @@ export const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 9,
+          borderRadius: 8,
           backgroundColor: relayForgeTokens.color.surface,
           transition: 'border-color 180ms ease, box-shadow 180ms ease',
           '& .MuiOutlinedInput-notchedOutline': {
@@ -283,8 +275,7 @@ export const theme = createTheme({
       styleOverrides: {
         paper: {
           border: `1px solid ${alpha(relayForgeTokens.color.borderStrong, 0.76)}`,
-          background:
-            `linear-gradient(180deg, ${alpha(relayForgeTokens.color.surfaceRaised, 0.98)} 0%, ${relayForgeTokens.color.surface} 100%)`,
+          background: relayForgeTokens.color.surface,
           boxShadow: relayForgeTokens.shadow.surface,
         },
       },
@@ -293,7 +284,6 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: 'rgba(23, 35, 28, 0.5)',
-          backdropFilter: 'blur(8px)',
         },
       },
     },

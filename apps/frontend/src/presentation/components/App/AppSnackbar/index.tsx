@@ -21,7 +21,7 @@ const AppSnackbar = ({ open, message, severity, onClose }: AppSnackbarProps) => 
         severity={severity}
         variant="filled"
         role="status"
-        sx={{ borderRadius: 3, boxShadow: 8 }}
+        sx={{ borderRadius: '18px', boxShadow: 8 }}
       >
         {message}
       </Alert>

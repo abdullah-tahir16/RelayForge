@@ -22,7 +22,7 @@ const toneStyles = {
     borderColor: alpha(relayForgeTokens.color.borderStrong, 0.48),
   },
   danger: {
-    background: `linear-gradient(180deg, ${alpha(relayForgeTokens.color.danger, 0.08)} 0%, ${relayForgeTokens.color.surface} 100%)`,
+    background: alpha(relayForgeTokens.color.danger, 0.06),
     borderColor: alpha(relayForgeTokens.color.danger, 0.38),
   },
 };
@@ -41,8 +41,8 @@ const AppSurface = ({
         position: 'relative',
         minWidth: 0,
         overflow: 'hidden',
-        borderRadius: 2.5,
-        boxShadow: relayForgeTokens.shadow.surface,
+        borderRadius: '8px',
+        boxShadow: 'none',
         ...toneStyles[tone],
         ...sx,
       }}

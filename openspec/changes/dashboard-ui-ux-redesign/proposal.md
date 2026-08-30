@@ -4,7 +4,7 @@ RelayForge's dashboard now exposes the core delivery lifecycle, but its visual s
 
 ## What Changes
 
-- Establish a distinctive RelayForge dashboard direction: a low-glare light infrastructure operations console with warm neutral surfaces, crisp borders, clear webhook/delivery status language, technical typography, and restrained motion.
+- Establish a distinctive RelayForge dashboard direction: a premium low-glare light infrastructure operations console with a soft gray app canvas, white floating modules, compact navigation, clear webhook/delivery status language, technical typography, and restrained motion.
 - Replace default-feeling frontend theming with semantic design tokens for background, surfaces, borders, text, focus, status, shadows, density, typography, and component states.
 - Redesign the authenticated dashboard shell: sidebar, header, project switcher placement, page container rhythm, active navigation, responsive behavior, and route-level focus/accessibility expectations.
 - Upgrade shared UI primitives used across the app: buttons, tables, chips, dialogs, inputs, selects/autocomplete, skeleton/loading states, toast/snackbar feedback, and confirmation flows.

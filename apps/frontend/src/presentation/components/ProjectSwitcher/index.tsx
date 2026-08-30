@@ -41,9 +41,10 @@ const ProjectSwitcher = ({
       label="Project"
       options={options}
       value={value}
+      margin="none"
       onChange={(event) => onChange(event.target.value)}
       sx={{
-        width: { xs: '100%', sm: 230 },
+        width: { xs: '100%', sm: 220 },
         '& .MuiOutlinedInput-root': {
           height: 44,
           bgcolor: 'background.paper',
